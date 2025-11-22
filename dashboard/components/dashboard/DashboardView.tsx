@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCaseStudy } from '@/lib/hooks/useCaseStudy';
 import { useMetrics } from '@/lib/hooks/useMetrics';
 import { CycleTimeChart } from './CycleTimeChart';
+import { DataQualityView } from './DataQualityView';
 import { EffortComplexityView } from './EffortComplexityView';
 import { LeadTimeChart } from './LeadTimeChart';
 import { MetricsCards } from './MetricsCards';
@@ -80,6 +81,8 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
       </div>
 
       <EffortComplexityView caseStudyId={caseStudyId} />
+
+      <DataQualityView caseStudyId={caseStudyId} />
 
       <TimelineView caseStudyId={caseStudyId} />
     </div>

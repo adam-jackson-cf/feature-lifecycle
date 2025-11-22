@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTimeline } from '@/lib/hooks/useTimeline';
 
@@ -16,6 +16,33 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
   const [filterDiscipline, setFilterDiscipline] = useState<string>('all');
   const [filterComplexity, setFilterComplexity] = useState<string>('all');
   const [filterAI, setFilterAI] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`timelineFilters:${caseStudyId}`);
+      if (stored) {
+        const parsed = JSON.parse(stored) as {
+          discipline?: string;
+          complexity?: string;
+          ai?: boolean | null;
+        };
+        setFilterDiscipline(parsed.discipline || 'all');
+        setFilterComplexity(parsed.complexity || 'all');
+        setFilterAI(parsed.ai ?? null);
+      }
+    } catch {
+      // ignore corrupted storage
+    }
+  }, [caseStudyId]);
+
+  useEffect(() => {
+    const payload = {
+      discipline: filterDiscipline,
+      complexity: filterComplexity,
+      ai: filterAI,
+    };
+    localStorage.setItem(`timelineFilters:${caseStudyId}`, JSON.stringify(payload));
+  }, [caseStudyId, filterAI, filterComplexity, filterDiscipline]);
 
   if (isLoading) {
     return <div>Loading timeline...</div>;
@@ -82,18 +109,36 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          {filteredTimeline?.map((event) => (
-            <div key={event.id} className="flex items-center gap-4 p-2 border rounded">
-              <span className="text-sm text-zinc-500">{event.eventDate.toLocaleDateString()}</span>
-              <Badge variant={event.eventSource === 'jira' ? 'default' : 'secondary'}>
-                {event.eventSource.toUpperCase()}
-              </Badge>
-              <span className="font-medium">{event.ticketKey}</span>
-              <span className="text-sm">{event.eventType.replace(/_/g, ' ')}</span>
-            </div>
-          ))}
-        </div>
+        {!timeline || timeline.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No timeline events found for this case study.
+          </div>
+        ) : filteredTimeline && filteredTimeline.length > 0 ? (
+          <div className="space-y-2">
+            {filteredTimeline.map((event) => {
+              const eventDate =
+                event.eventDate instanceof Date ? event.eventDate : new Date(event.eventDate);
+              return (
+                <div key={event.id} className="flex items-center gap-4 p-2 border rounded-lg">
+                  <span className="text-sm text-muted-foreground">
+                    {eventDate.toLocaleDateString()}
+                  </span>
+                  <Badge variant={event.eventSource === 'jira' ? 'default' : 'secondary'}>
+                    {event.eventSource.toUpperCase()}
+                  </Badge>
+                  <span className="font-medium">{event.ticketKey}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {event.eventType.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No events match the selected filters.
+          </div>
+        )}
         {/* TODO: Add vis-timeline integration */}
       </CardContent>
     </Card>

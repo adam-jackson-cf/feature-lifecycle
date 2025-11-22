@@ -31,7 +31,7 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
       </CardHeader>
       <CardContent>
         {isLoading || !complexityData ? (
-          <div className="text-sm text-zinc-500">Loading...</div>
+          <div className="text-sm text-muted-foreground">Loading...</div>
         ) : (
           <div className="space-y-6">
             <div>
@@ -55,9 +55,7 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
               <div className="grid grid-cols-3 gap-4">
                 {Object.entries(complexityData.byDiscipline).map(([discipline, count]) => (
                   <div key={discipline} className="text-center">
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 capitalize">
-                      {discipline}
-                    </p>
+                    <p className="text-sm text-muted-foreground capitalize">{discipline}</p>
                     <p className="text-2xl font-bold">{count}</p>
                   </div>
                 ))}
