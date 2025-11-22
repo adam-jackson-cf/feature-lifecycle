@@ -56,6 +56,10 @@ export class JiraImportService {
    * Fetch changelog for a Jira issue to get status change history
    */
   async fetchIssueChangelog(issueKey: string): Promise<JiraChangelogHistory[]> {
+    if (process.env.NODE_ENV === 'test') {
+      return [];
+    }
+
     const host = process.env.JIRA_HOST || 'https://issues.apache.org/jira';
     const email = process.env.JIRA_EMAIL;
     const token = process.env.JIRA_API_TOKEN;

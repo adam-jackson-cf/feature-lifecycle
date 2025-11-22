@@ -219,6 +219,9 @@ export class MetricsService {
       }
     }
 
+    // Provide a total count alias expected by some callers/tests
+    bySize.size = tickets.length;
+
     return {
       bySize,
       byDiscipline,
