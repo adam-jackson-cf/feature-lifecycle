@@ -1,0 +1,54 @@
+{
+  "rules": [
+    {
+      "discipline": "backend",
+      "patterns": {
+        "labels": ["backend", "api", "server", "service"],
+        "components": ["backend", "api", "server"],
+        "repoPaths": ["**/server/**", "**/api/**", "**/backend/**"]
+      }
+    },
+    {
+      "discipline": "frontend",
+      "patterns": {
+        "labels": ["frontend", "ui", "ux", "web"],
+        "components": ["frontend", "ui", "web"],
+        "repoPaths": ["**/client/**", "**/web/**", "**/frontend/**", "**/app/**"]
+      }
+    },
+    {
+      "discipline": "mobile",
+      "patterns": {
+        "labels": ["mobile", "ios", "android", "react-native"],
+        "components": ["mobile", "ios", "android"],
+        "repoPaths": ["**/mobile/**", "**/ios/**", "**/android/**"]
+      }
+    },
+    {
+      "discipline": "devops",
+      "patterns": {
+        "labels": ["devops", "infrastructure", "deployment", "ci/cd"],
+        "components": ["devops", "infrastructure"],
+        "repoPaths": ["**/.github/**", "**/infra/**", "**/deploy/**"]
+      }
+    },
+    {
+      "discipline": "data",
+      "patterns": {
+        "labels": ["data", "database", "analytics", "etl"],
+        "components": ["data", "database"],
+        "repoPaths": ["**/data/**", "**/db/**", "**/analytics/**"]
+      }
+    },
+    {
+      "discipline": "qa",
+      "patterns": {
+        "labels": ["qa", "testing", "test", "quality"],
+        "components": ["qa", "testing"],
+        "repoPaths": ["**/test/**", "**/tests/**", "**/qa/**"]
+      }
+    }
+  ],
+  "default": "unknown",
+  "priority": ["labels", "components", "repoPaths"]
+}
