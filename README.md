@@ -5,7 +5,7 @@ A comprehensive dashboard application that tracks the complete development lifec
 ## Project Structure
 
 ```
-feature-lifecycle-dashboard/
+feature-lifecycle/
 ├── README.md              # This file
 ├── research.md            # Consolidated research documentation
 ├── ARCHITECTURE.md        # System architecture and design decisions
@@ -20,7 +20,7 @@ feature-lifecycle-dashboard/
     │   └── utils/         # Helper functions
     ├── tests/
     │   ├── fixtures/      # Mock data for testing
-    │   ├── unit/          # Unit tests (8 passing)
+    │   ├── unit/          # Unit tests (14 passing)
     │   └── integration/   # Real API integration tests
     └── public/            # Static assets
 ```
@@ -38,8 +38,8 @@ feature-lifecycle-dashboard/
 
 ```bash
 cd dashboard
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 ## Running Tests
@@ -48,21 +48,27 @@ npm run dev
 cd dashboard
 
 # Unit tests (offline, uses mock data)
-npm run test:unit
+bun run test:unit
 
 # Integration tests (requires network access)
-npm run test:integration
+bun run test:integration
 
 # All tests
-npm run test:run
+bun run test:run
 ```
 
 ## Quality Gates
 
 All must pass before commit:
-- TypeScript type checking: `npm run typecheck`
-- ESLint linting: `npm run lint`
-- Unit tests: `npm run test:unit`
+- TypeScript type checking: `bun run typecheck`
+- Ultracite linting: `bun run lint`
+- Unit tests: `bun run test:unit`
+
+Or use the Makefile for all quality gates:
+```bash
+cd dashboard
+make quality-gates
+```
 
 ## Documentation
 
@@ -79,11 +85,13 @@ Both APIs are publicly accessible without authentication for read-only access.
 
 ## Technology Stack
 
-- **Runtime**: Node.js 20+
-- **Language**: TypeScript 5.7+
-- **Framework**: Next.js 15
+- **Runtime**: Bun (replaces npm)
+- **Language**: TypeScript 5+
+- **Framework**: Next.js 16 (App Router)
 - **Database**: SQLite with better-sqlite3
+- **Linting/Formatting**: Ultracite (Biome-based)
 - **Jira Integration**: jira.js
 - **GitHub Integration**: Octokit
 - **Testing**: Vitest
 - **UI**: React 19, Tailwind CSS, Recharts, vis-timeline
+- **State Management**: TanStack Query
