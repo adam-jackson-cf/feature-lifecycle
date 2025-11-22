@@ -85,7 +85,7 @@ Both APIs are publicly accessible without authentication for read-only access.
 
 ## Technology Stack
 
-- **Runtime**: Bun (replaces npm)
+- **Runtime**: Bun (replaces npm entirely; use `bun install`/`bun run`)
 - **Language**: TypeScript 5+
 - **Framework**: Next.js 16 (App Router)
 - **Database**: SQLite with better-sqlite3

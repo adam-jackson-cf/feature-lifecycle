@@ -783,10 +783,10 @@ NODE_ENV=production
 ### Build Process
 
 ```bash
-npm run build     # Build Next.js app
-npm run test      # Run all tests
-npm run lint      # Run ESLint
-npm run typecheck # Run TypeScript check
+bun run build     # Build Next.js app
+bun run test      # Run all tests
+bun run lint      # Run Ultracite (Biome) lint config
+bun run typecheck # Run TypeScript check
 ```
 
 ### Pre-commit Hooks

@@ -9,8 +9,8 @@ Date: 2025-11-22
 - Added Jira import API routes for project/sprint/ticket; GitHub import already existed.
 - Frontend: Dashboard now renders metrics cards, charts, effort/complexity view, and timeline using hooks to the new APIs.
 - Added rules/config files: `config/complexity.config.json`, `config/discipline-rules.json`; rules editor page exists.
-- Tests: new unit tests for complexity, discipline, metrics summary, Jira import complexity/AI; live integration test guarded by `RUN_LIVE=1` (uses Apache Kafka Jira/GitHub).
-- Quality gates fixed: lint (ultracite), typecheck, unit tests now pass via `make`. Integration suite skipped by default; run with `RUN_LIVE=1 npm run test:integration` if network allowed.
+- Tests: new unit tests for complexity, discipline, metrics summary, Jira import complexity/AI; live integration test exercises Apache Kafka Jira/GitHub data.
+- Quality gates fixed: lint (ultracite), typecheck, unit tests now pass via `make`. Integration suite hits Apache Kafka Jira/GitHub via `bun run test:integration` when network allowed.
 
 ## Key files touched
 - Services: `dashboard/lib/services/complexity.service.ts`, `jira-import.service.ts`, `discipline.service.ts`, `metrics.service.ts`
@@ -22,7 +22,7 @@ Date: 2025-11-22
 
 ## How to run
 - Quality gates: `cd dashboard && make` (lint, typecheck, unit, fast integration stub).
-- Live integration: `cd dashboard && RUN_LIVE=1 npm run test:integration` (hits Kafka Jira/GitHub).
+- Live integration: `cd dashboard && bun run test:integration` (hits Kafka Jira/GitHub).
 
 ## Open follow-ups
 - Wire UI filters (discipline/complexity/AI) fully to timeline/charts; fetch real Jira/GitHub data with pagination/changelog/PR files.

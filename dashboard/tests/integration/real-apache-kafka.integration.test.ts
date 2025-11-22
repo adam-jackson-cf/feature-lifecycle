@@ -19,7 +19,6 @@ import { GitHubImportService } from '@/lib/services/github-import.service';
 import { JiraImportService } from '@/lib/services/jira-import.service';
 
 // Test configuration
-const RUN_LIVE = process.env.RUN_LIVE === '1';
 const JIRA_BASE_URL = 'https://issues.apache.org/jira/rest/api/2';
 const GITHUB_OWNER = 'apache';
 const GITHUB_REPO = 'kafka';
@@ -27,7 +26,7 @@ const GITHUB_REPO = 'kafka';
 // Known tickets to test (these exist in Apache Kafka)
 const TEST_TICKET_IDS = ['KAFKA-17541', 'KAFKA-19734'];
 
-describe.runIf(RUN_LIVE)('Apache Kafka Integration Test (Real Data)', () => {
+describe('Apache Kafka Integration Test (Real Data) [slow]', () => {
   let db: Database.Database;
   let jiraImportService: JiraImportService;
   let githubImportService: GitHubImportService;

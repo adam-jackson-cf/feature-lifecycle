@@ -32,7 +32,7 @@ test-integration-fast: ## Run integration tests (excluding slow tests)
 	@echo "$(YELLOW)Running fast integration tests...$(NC)"
 	# Note: When slow tests are added, mark them with .skip() or use --testNamePattern to exclude
 	# Example: --testNamePattern="^(?!.*slow).*" to exclude tests with "slow" in the name
-	@bun run test:integration -- --reporter=verbose
+	@bun run test:integration -- --reporter=verbose --testNamePattern="^(?!.*\\[slow\\]).*"
 	@echo "$(GREEN)✓ Fast integration tests passed$(NC)"
 
 quality-gates: lint typecheck test-unit test-integration-fast ## Run all quality gates (lint, typecheck, unit tests, fast integration tests)
@@ -40,4 +40,3 @@ quality-gates: lint typecheck test-unit test-integration-fast ## Run all quality
 	@echo "$(GREEN)========================================$(NC)"
 	@echo "$(GREEN)  All quality gates passed! ✓$(NC)"
 	@echo "$(GREEN)========================================$(NC)"
-

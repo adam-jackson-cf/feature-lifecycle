@@ -17,7 +17,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky install"
+    "prepare": "node scripts/install-husky.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

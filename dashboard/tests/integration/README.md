@@ -28,10 +28,7 @@ This integration test demonstrates the complete feature lifecycle tracking syste
 
 ```bash
 # Run integration tests (requires network access)
-npx vitest run --config vitest.integration.config.ts
-
-# Run in an environment with network access
-npm run test:integration
+bun run test:integration
 ```
 
 ### API Verification
@@ -101,7 +98,7 @@ When network access is available, the test should:
 For environments without network access, use the unit tests which rely on mock fixtures:
 
 ```bash
-npm run test -- tests/unit/
+bun run test -- tests/unit/
 ```
 
 ## Adding More Integration Tests

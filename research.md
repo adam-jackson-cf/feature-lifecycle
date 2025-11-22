@@ -64,14 +64,14 @@ curl "https://api.github.com/repos/apache/kafka/commits?per_page=5"
 ### Installation Commands
 ```bash
 # Core Integration
-npm install jira.js octokit better-sqlite3 zod remeda uuid
+bun add jira.js octokit better-sqlite3 zod remeda uuid
 
 # Frontend
-npm install next react react-dom @tanstack/react-query recharts vis-timeline
+bun add next react react-dom @tanstack/react-query recharts vis-timeline
 
 # Development
-npm install -D typescript vitest @vitest/ui eslint prettier husky lint-staged
-npm install -D @types/better-sqlite3 @types/uuid @testing-library/react
+bun add -d typescript vitest @vitest/ui ultracite husky lint-staged
+bun add -d @types/better-sqlite3 @types/uuid @testing-library/react
 ```
 
 ---
@@ -80,7 +80,7 @@ npm install -D @types/better-sqlite3 @types/uuid @testing-library/react
 
 ### Selected Library: jira.js
 
-**Package:** `npm install jira.js`
+**Package:** `bun add jira.js`
 **Documentation:** https://mrrefactoring.github.io/jira.js/
 **GitHub:** https://github.com/MrRefactoring/jira.js
 
@@ -137,7 +137,7 @@ Jira groups all statuses into 3 categories:
 
 ### Selected Library: Octokit
 
-**Package:** `npm install octokit`
+**Package:** `bun add octokit`
 **Documentation:** Official GitHub SDK
 **GitHub:** https://github.com/octokit/octokit.js
 
@@ -317,13 +317,13 @@ All must pass before commit:
 ### Running Tests
 ```bash
 # Unit tests (offline, uses mock data)
-npm run test:unit
+bun run test:unit
 
 # Integration tests (requires network)
-npm run test:integration
+bun run test:integration
 
 # All tests
-npm run test:run
+bun run test:run
 ```
 
 ---

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+REPO_ROOT="$(dirname "$0")/.."
+cd "$REPO_ROOT" || exit 1
+
+cd dashboard || exit 1
+make quality-gates
