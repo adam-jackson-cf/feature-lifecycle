@@ -1,3 +1,4 @@
+import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import type { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import type { LifecycleEvent, MetricsSummary } from '@/lib/types';
@@ -84,6 +85,7 @@ export class MetricsService {
   async getMetricsSummary(caseStudyId: string): Promise<MetricsSummary> {
     const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
     const events = this.lifecycleEventRepo.findByCaseStudy(caseStudyId);
+    const prRepo = new GithubPullRequestRepository();
 
     const completedTickets = tickets.filter((t) => t.statusCategory === 'Done');
     const avgMetrics = this.jiraTicketRepo.getAverageMetrics(caseStudyId);
@@ -91,15 +93,11 @@ export class MetricsService {
     const commitEvents = events.filter(
       (e) => e.eventSource === 'github' && e.eventType === 'commit_created'
     );
-    const prEvents = events.filter(
-      (e) =>
-        e.eventSource === 'github' && (e.eventType === 'pr_opened' || e.eventType === 'pr_merged')
-    );
-
     const velocityPoints = completedTickets.reduce(
       (sum, ticket) => sum + (ticket.storyPoints || 0),
       0
     );
+    const prCount = prRepo.countByCaseStudy(caseStudyId);
 
     return {
       totalTickets: tickets.length,
@@ -107,7 +105,7 @@ export class MetricsService {
       avgCycleTime: avgMetrics.avgCycleTime || 0,
       avgLeadTime: avgMetrics.avgLeadTime || 0,
       totalCommits: commitEvents.length,
-      totalPRs: prEvents.length,
+      totalPRs: prCount,
       velocityPoints,
     };
   }

@@ -318,6 +318,29 @@ export interface LifecycleEventRow {
   created_at: string;
 }
 
+export interface GitHubPullRequestRow {
+  id: string;
+  case_study_id: string;
+  ticket_keys: string;
+  pr_number: number;
+  title: string;
+  description: string | null;
+  state: 'open' | 'closed' | 'merged';
+  author_name: string;
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+  merged_at: string | null;
+  base_branch: string;
+  head_branch: string;
+  additions: number;
+  deletions: number;
+  commits_count: number;
+  reviewers: string | null;
+  approved_by: string | null;
+  url: string;
+}
+
 export interface GitHubCommitRow {
   id: string;
   case_study_id: string;
@@ -342,7 +365,7 @@ export interface GitHubPullRequestRow {
   pr_number: number;
   title: string;
   description: string | null;
-  state: string;
+  state: 'open' | 'closed' | 'merged';
   author_name: string;
   created_at: string;
   updated_at: string;

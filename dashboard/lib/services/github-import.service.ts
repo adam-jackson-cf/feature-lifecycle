@@ -1,8 +1,9 @@
 import { Octokit } from 'octokit';
 import type { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
+import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import type { LifecycleEvent } from '@/lib/types';
-import { EventType as EventTypeEnum } from '@/lib/types';
+import { EventType as EventTypeEnum, type GitHubPullRequest } from '@/lib/types';
 import { extractTicketIds } from '@/lib/utils';
 
 export interface GitHubCommitData {
@@ -38,6 +39,7 @@ export class GitHubImportService {
   constructor(
     private lifecycleEventRepo: LifecycleEventRepository,
     private caseStudyRepo: CaseStudyRepository,
+    private prRepo = new GithubPullRequestRepository(),
     githubToken?: string
   ) {
     this.octokit = new Octokit({ auth: githubToken });
@@ -142,6 +144,149 @@ export class GitHubImportService {
         this.caseStudyRepo.update(caseStudyId, {
           status: 'error',
           errorMessage: `GitHub import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        });
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Import pull requests and create lifecycle events for linked tickets
+   */
+  async importPullRequests(
+    caseStudyId: string,
+    owner: string,
+    repo: string,
+    options: {
+      state?: 'open' | 'closed' | 'all';
+      perPage?: number;
+      maxPulls?: number;
+      since?: Date;
+    } = {}
+  ): Promise<{ prsImported: number; prEvents: number }> {
+    const { state = 'all', perPage = 50, maxPulls = 200, since } = options;
+    const prRecords: Omit<GitHubPullRequest, 'id'>[] = [];
+    const events: Omit<LifecycleEvent, 'id' | 'createdAt'>[] = [];
+
+    let page = 1;
+    let imported = 0;
+
+    try {
+      while (imported < maxPulls) {
+        const response = await this.octokit.rest.pulls.list({
+          owner,
+          repo,
+          state,
+          per_page: perPage,
+          page,
+          sort: 'updated',
+          direction: 'desc',
+        });
+
+        if (response.data.length === 0) break;
+
+        for (const pr of response.data) {
+          if (since && new Date(pr.updated_at) < since) {
+            continue;
+          }
+
+          const ticketKeys = extractTicketIds(
+            `${pr.title} ${pr.body || ''} ${pr.head?.ref || ''} ${pr.base?.ref || ''}`
+          );
+          const prState: GitHubPullRequest['state'] =
+            pr.merged_at !== null ? 'merged' : pr.state === 'closed' ? 'closed' : 'open';
+          const prStats = pr as unknown as {
+            additions?: number;
+            deletions?: number;
+            commits?: number;
+            merged_by?: { login?: string; id?: number };
+          };
+
+          prRecords.push({
+            caseStudyId,
+            ticketKeys,
+            prNumber: pr.number,
+            title: pr.title,
+            description: pr.body || undefined,
+            state: prState,
+            authorName: pr.user?.login || pr.user?.name || 'Unknown',
+            createdAt: new Date(pr.created_at),
+            updatedAt: new Date(pr.updated_at),
+            closedAt: pr.closed_at ? new Date(pr.closed_at) : undefined,
+            mergedAt: pr.merged_at ? new Date(pr.merged_at) : undefined,
+            baseBranch: pr.base.ref,
+            headBranch: pr.head.ref,
+            additions: prStats.additions ?? 0,
+            deletions: prStats.deletions ?? 0,
+            commitsCount: prStats.commits ?? 0,
+            reviewers: (pr.requested_reviewers || []).map((r) => r.login),
+            approvedBy: [],
+            url: pr.html_url,
+          });
+
+          // Create lifecycle events only when we have ticket linkage
+          for (const ticketKey of ticketKeys) {
+            events.push({
+              caseStudyId,
+              ticketKey,
+              eventType: EventTypeEnum.PR_OPENED,
+              eventSource: 'github',
+              eventDate: new Date(pr.created_at),
+              actorName: pr.user?.login || 'Unknown',
+              actorId: pr.user?.id ? String(pr.user.id) : undefined,
+              details: {
+                prNumber: pr.number,
+                prTitle: pr.title,
+                prUrl: pr.html_url,
+              },
+            });
+
+            if (pr.merged_at) {
+              events.push({
+                caseStudyId,
+                ticketKey,
+                eventType: EventTypeEnum.PR_MERGED,
+                eventSource: 'github',
+                eventDate: new Date(pr.merged_at),
+                actorName: prStats.merged_by?.login || pr.user?.login || 'Unknown',
+                actorId: prStats.merged_by?.id ? String(prStats.merged_by.id) : undefined,
+                details: {
+                  prNumber: pr.number,
+                  prTitle: pr.title,
+                  prUrl: pr.html_url,
+                },
+              });
+            }
+          }
+
+          imported++;
+          if (imported >= maxPulls) break;
+        }
+
+        page++;
+      }
+
+      if (prRecords.length > 0) {
+        this.prRepo.createMany(prRecords);
+      }
+
+      if (events.length > 0) {
+        this.lifecycleEventRepo.createMany(events);
+        const caseStudy = this.caseStudyRepo.findById(caseStudyId);
+        if (caseStudy) {
+          this.caseStudyRepo.update(caseStudyId, {
+            eventCount: caseStudy.eventCount + events.length,
+          });
+        }
+      }
+
+      return { prsImported: prRecords.length, prEvents: events.length };
+    } catch (error) {
+      const caseStudy = this.caseStudyRepo.findById(caseStudyId);
+      if (caseStudy) {
+        this.caseStudyRepo.update(caseStudyId, {
+          status: 'error',
+          errorMessage: `GitHub PR import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         });
       }
       throw error;

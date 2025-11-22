@@ -12,6 +12,7 @@ const importGitHubSchema = z.object({
   until: z.string().datetime().optional(),
   perPage: z.number().int().min(1).max(100).optional(),
   maxCommits: z.number().int().min(1).max(1000).optional(),
+  maxPulls: z.number().int().min(1).max(500).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -44,6 +45,17 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    const prResult = await githubImportService.importPullRequests(
+      validatedData.caseStudyId,
+      caseStudy.githubOwner,
+      caseStudy.githubRepo,
+      {
+        since: validatedData.since ? new Date(validatedData.since) : undefined,
+        perPage: validatedData.perPage,
+        maxPulls: validatedData.maxPulls,
+      }
+    );
+
     // Auto-trigger correlation
     const jiraTicketRepo = new JiraTicketRepository();
     const correlationService = new CorrelationService(jiraTicketRepo, lifecycleEventRepo);
@@ -52,12 +64,13 @@ export async function POST(request: NextRequest) {
     // Update case study status
     caseStudyRepo.update(validatedData.caseStudyId, {
       status: 'completed',
-      eventCount: caseStudy.eventCount + eventsImported,
     });
 
     return NextResponse.json({
       success: true,
-      eventsImported,
+      eventsImported: eventsImported + prResult.prEvents,
+      commitsImported: eventsImported,
+      prsImported: prResult.prsImported,
       message: 'GitHub import completed',
     });
   } catch (error) {
