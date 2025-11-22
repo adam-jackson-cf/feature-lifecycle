@@ -7,6 +7,7 @@ import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository'
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import { JiraImportService } from '@/lib/services/jira-import.service';
 import { MetricsService } from '@/lib/services/metrics.service';
+import { EventType } from '@/lib/types';
 import { mockIssues } from '@/tests/fixtures/jira/mock-issues';
 
 describe('MetricsService', () => {
@@ -60,5 +61,100 @@ describe('MetricsService', () => {
 
     expect(summary.totalTickets).toBeGreaterThan(0);
     expect(breakdown.bySize.size).toBeGreaterThan(0);
+  });
+
+  it('calculates time-in-status per status bucket', async () => {
+    const createdAt = new Date('2024-01-01T00:00:00Z');
+    const inProgressAt = new Date('2024-01-03T00:00:00Z');
+    const doneAt = new Date('2024-01-05T00:00:00Z');
+
+    // Insert ticket directly
+    const ticket = jiraRepo.create({
+      caseStudyId,
+      jiraId: '1',
+      jiraKey: 'TEST-1',
+      summary: 'Test ticket',
+      description: '',
+      issueType: 'Story',
+      priority: 'Major',
+      currentStatus: 'Done',
+      statusCategory: 'Done',
+      createdAt,
+      updatedAt: doneAt,
+      resolvedAt: doneAt,
+      rawJiraData: {},
+    });
+
+    // Status change events
+    lifecycleRepo.create({
+      caseStudyId,
+      ticketKey: ticket.jiraKey,
+      eventType: EventType.STATUS_CHANGED,
+      eventSource: 'jira',
+      eventDate: inProgressAt,
+      actorName: 'system',
+      details: { fromStatus: 'To Do', toStatus: 'In Progress' },
+    });
+
+    lifecycleRepo.create({
+      caseStudyId,
+      ticketKey: ticket.jiraKey,
+      eventType: EventType.STATUS_CHANGED,
+      eventSource: 'jira',
+      eventDate: doneAt,
+      actorName: 'system',
+      details: { fromStatus: 'In Progress', toStatus: 'Done' },
+    });
+
+    const timeInStatus = await metrics.getTimeInStatus(caseStudyId);
+    const toDoMs = timeInStatus.get('To Do') || 0;
+    const inProgressMs = timeInStatus.get('In Progress') || 0;
+
+    expect(Math.round(toDoMs / (1000 * 60 * 60 * 24))).toBe(2); // 2 days
+    expect(Math.round(inProgressMs / (1000 * 60 * 60 * 24))).toBe(2); // 2 days
+    expect(timeInStatus.get('Done')).toBeGreaterThanOrEqual(0);
+  });
+
+  it('computes churn metrics (status change count)', async () => {
+    const now = new Date('2024-01-01T00:00:00Z');
+
+    const ticket = jiraRepo.create({
+      caseStudyId,
+      jiraId: '2',
+      jiraKey: 'TEST-2',
+      summary: 'Churn ticket',
+      description: '',
+      issueType: 'Task',
+      priority: 'Major',
+      currentStatus: 'In Progress',
+      statusCategory: 'In Progress',
+      createdAt: now,
+      updatedAt: now,
+      rawJiraData: {},
+    });
+
+    lifecycleRepo.create({
+      caseStudyId,
+      ticketKey: ticket.jiraKey,
+      eventType: EventType.STATUS_CHANGED,
+      eventSource: 'jira',
+      eventDate: new Date('2024-01-02T00:00:00Z'),
+      actorName: 'system',
+      details: { fromStatus: 'To Do', toStatus: 'In Progress' },
+    });
+
+    lifecycleRepo.create({
+      caseStudyId,
+      ticketKey: ticket.jiraKey,
+      eventType: EventType.STATUS_CHANGED,
+      eventSource: 'jira',
+      eventDate: new Date('2024-01-03T00:00:00Z'),
+      actorName: 'system',
+      details: { fromStatus: 'In Progress', toStatus: 'To Do' },
+    });
+
+    const churn = await metrics.getChurnMetrics(caseStudyId);
+    expect(churn.totalStatusChanges).toBe(2);
+    expect(churn.avgStatusChangesPerTicket).toBeCloseTo(2, 5);
   });
 });

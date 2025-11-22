@@ -114,9 +114,39 @@ export class MetricsService {
    * Get time-in-status rollups for a case study
    */
   async getTimeInStatus(caseStudyId: string): Promise<Map<string, number>> {
-    // For now, return status distribution as a proxy for time-in-status
-    // Full time-in-status calculation would require event-level analysis
-    return this.jiraTicketRepo.countByStatus(caseStudyId);
+    const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
+    const events = this.lifecycleEventRepo
+      .findByCaseStudy(caseStudyId)
+      .filter((e) => e.eventType === 'status_changed');
+
+    const totals = new Map<string, number>();
+
+    for (const ticket of tickets) {
+      const ticketEvents = events
+        .filter((e) => e.ticketKey === ticket.jiraKey)
+        .sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
+
+      let currentStatus =
+        (ticketEvents[0]?.details.fromStatus as string | undefined) ||
+        ticket.currentStatus ||
+        'unknown';
+      let cursor = ticket.createdAt;
+
+      for (const event of ticketEvents) {
+        const duration = calculateTimeDiff(cursor, event.eventDate);
+        totals.set(currentStatus, (totals.get(currentStatus) || 0) + duration);
+
+        currentStatus = (event.details.toStatus as string | undefined) || currentStatus;
+        cursor = event.eventDate;
+      }
+
+      const end =
+        ticket.resolvedAt || ticket.updatedAt || ticketEvents.at(-1)?.eventDate || new Date();
+      const trailing = calculateTimeDiff(cursor, end);
+      totals.set(currentStatus, (totals.get(currentStatus) || 0) + trailing);
+    }
+
+    return totals;
   }
 
   /**
@@ -227,5 +257,29 @@ export class MetricsService {
       byDiscipline,
       oversize,
     };
+  }
+
+  /**
+   * Get churn metrics (status change churn)
+   */
+  async getChurnMetrics(caseStudyId: string): Promise<{
+    totalStatusChanges: number;
+    avgStatusChangesPerTicket: number;
+  }> {
+    const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
+    const statusEvents = this.lifecycleEventRepo
+      .findByCaseStudy(caseStudyId)
+      .filter((e) => e.eventType === 'status_changed');
+
+    const _countsByTicket = statusEvents.reduce<Record<string, number>>((acc, evt) => {
+      acc[evt.ticketKey] = (acc[evt.ticketKey] || 0) + 1;
+      return acc;
+    }, {});
+
+    const totalStatusChanges = statusEvents.length;
+    const avgStatusChangesPerTicket = tickets.length > 0 ? totalStatusChanges / tickets.length : 0;
+
+    // Ensure tickets with zero changes are counted in average denominator above.
+    return { totalStatusChanges, avgStatusChangesPerTicket };
   }
 }
