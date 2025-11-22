@@ -53,6 +53,30 @@ export class JiraImportService {
   }
 
   /**
+   * Fetch changelog for a Jira issue to get status change history
+   */
+  async fetchIssueChangelog(issueKey: string): Promise<JiraChangelogHistory[]> {
+    const host = process.env.JIRA_HOST || 'https://issues.apache.org/jira';
+    const email = process.env.JIRA_EMAIL;
+    const token = process.env.JIRA_API_TOKEN;
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (email && token) {
+      const auth = Buffer.from(`${email}:${token}`).toString('base64');
+      headers.Authorization = `Basic ${auth}`;
+    }
+
+    const url = `${host}/rest/api/2/issue/${issueKey}?expand=changelog`;
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) {
+      console.warn(`Failed to fetch changelog for ${issueKey}: ${resp.status}`);
+      return [];
+    }
+    const json = (await resp.json()) as { changelog?: { histories: JiraChangelogHistory[] } };
+    return json.changelog?.histories || [];
+  }
+
+  /**
    * Import Jira issues for a case study
    */
   async importIssues(caseStudyId: string, issues: JiraIssue[]): Promise<void> {
@@ -125,16 +149,34 @@ export class JiraImportService {
       this.jiraTicketRepo.createMany(tickets);
       this.lifecycleEventRepo.createMany(events);
 
+      // Fetch and import changelogs for status change events
+      for (const issue of issues) {
+        try {
+          const changelogHistories = await this.fetchIssueChangelog(issue.key);
+          if (changelogHistories.length > 0) {
+            await this.importChangelogs(caseStudyId, issue.key, changelogHistories);
+          }
+        } catch (error) {
+          console.warn(`Failed to import changelog for ${issue.key}:`, error);
+        }
+      }
+
+      // Calculate metrics (cycle time, lead time) after all data is imported
+      await this.calculateMetrics(caseStudyId);
+
       // Calculate date range
       const dates = issues.map((i) => new Date(i.fields.created).getTime());
       const startDate = new Date(Math.min(...dates));
       const endDate = new Date(Math.max(...dates));
 
+      // Get final event count after changelog import
+      const finalEventCount = this.lifecycleEventRepo.findByCaseStudy(caseStudyId).length;
+
       // Update case study
       this.caseStudyRepo.update(caseStudyId, {
         status: 'completed',
         ticketCount: issues.length,
-        eventCount: events.length,
+        eventCount: finalEventCount,
         startDate,
         endDate,
       });
@@ -207,24 +249,47 @@ export class JiraImportService {
     for (const ticket of tickets) {
       const events = this.lifecycleEventRepo.findByTicket(ticket.jiraKey);
 
-      // Calculate lead time (created to resolved)
-      if (ticket.resolvedAt) {
-        const leadTime = calculateTimeDiff(ticket.createdAt, ticket.resolvedAt);
+      // Calculate lead time (created to resolved or updated)
+      const endDate = ticket.resolvedAt || ticket.updatedAt;
+      if (endDate) {
+        const leadTime = calculateTimeDiff(ticket.createdAt, endDate);
         ticket.leadTime = leadTime;
       }
 
-      // Calculate cycle time (in progress to done)
-      const inProgressEvent = events.find(
-        (e) =>
-          e.eventType === EventTypeEnum.STATUS_CHANGED && e.details.toStatus?.includes('Progress')
-      );
-      const doneEvent = events.find(
-        (e) => e.eventType === EventTypeEnum.STATUS_CHANGED && e.details.toStatus?.includes('Done')
-      );
+      // Calculate cycle time (first commit to resolution, or in progress to done)
+      // Try method 1: First commit to resolution (if resolved)
+      if (ticket.resolvedAt) {
+        const firstCommit = events.find(
+          (e) => e.eventSource === 'github' && e.eventType === EventTypeEnum.COMMIT_CREATED
+        );
+        if (firstCommit) {
+          const cycleTime = calculateTimeDiff(firstCommit.eventDate, ticket.resolvedAt);
+          ticket.cycleTime = cycleTime;
+        }
+      }
 
-      if (inProgressEvent && doneEvent) {
-        const cycleTime = calculateTimeDiff(inProgressEvent.eventDate, doneEvent.eventDate);
-        ticket.cycleTime = cycleTime;
+      // Try method 2: Status change from In Progress to Done
+      if (!ticket.cycleTime) {
+        const inProgressEvent = events.find(
+          (e) =>
+            e.eventType === EventTypeEnum.STATUS_CHANGED &&
+            (e.details.toStatus?.toLowerCase().includes('progress') ||
+              e.details.toStatus === 'In Progress')
+        );
+        const doneEvent = events.find(
+          (e) =>
+            e.eventType === EventTypeEnum.STATUS_CHANGED &&
+            (e.details.toStatus?.toLowerCase().includes('done') || e.details.toStatus === 'Done')
+        );
+
+        if (inProgressEvent && doneEvent) {
+          const cycleTime = calculateTimeDiff(inProgressEvent.eventDate, doneEvent.eventDate);
+          ticket.cycleTime = cycleTime;
+        } else if (inProgressEvent && ticket.updatedAt) {
+          // If in progress but not done, calculate from in progress to now
+          const cycleTime = calculateTimeDiff(inProgressEvent.eventDate, ticket.updatedAt);
+          ticket.cycleTime = cycleTime;
+        }
       }
 
       // Update ticket with metrics
@@ -247,6 +312,13 @@ export class JiraImportService {
         : issue.fields.status.statusCategory.key === 'new'
           ? 'To Do'
           : 'In Progress';
+    const storyPointsRaw = issue.fields.customfield_10016;
+    const storyPoints =
+      typeof storyPointsRaw === 'number'
+        ? storyPointsRaw
+        : storyPointsRaw
+          ? Number(storyPointsRaw)
+          : undefined;
 
     return {
       caseStudyId,
@@ -264,7 +336,7 @@ export class JiraImportService {
       reporterName: issue.fields.reporter.displayName,
       sprintId: issue.fields.customfield_10104,
       sprintName: issue.fields.customfield_10104,
-      storyPoints: issue.fields.customfield_10016,
+      storyPoints,
       createdAt: new Date(issue.fields.created),
       updatedAt: new Date(issue.fields.updated),
       resolvedAt: issue.fields.resolutiondate ? new Date(issue.fields.resolutiondate) : undefined,

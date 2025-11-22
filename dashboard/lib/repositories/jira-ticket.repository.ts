@@ -145,6 +145,32 @@ export class JiraTicketRepository {
   }
 
   /**
+   * List distinct sprints for a case study with ticket counts
+   */
+  listSprints(caseStudyId: string): { id: string; name?: string; ticketCount: number }[] {
+    const stmt = this.db.prepare(
+      `
+      SELECT sprint_id as id, sprint_name as name, COUNT(*) as ticketCount
+      FROM jira_tickets
+      WHERE case_study_id = ? AND sprint_id IS NOT NULL
+      GROUP BY sprint_id, sprint_name
+      ORDER BY sprint_name IS NULL, sprint_name
+    `
+    );
+    const rows = stmt.all(caseStudyId) as Array<{
+      id: string;
+      name: string | null;
+      ticketCount: number;
+    }>;
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name || row.id,
+      ticketCount: row.ticketCount,
+    }));
+  }
+
+  /**
    * Update ticket
    */
   update(
@@ -246,13 +272,14 @@ export class JiraTicketRepository {
     avgCycleTime: number;
     avgStoryPoints: number;
   } {
+    // Calculate averages for tickets with metrics, not just resolved ones
     const stmt = this.db.prepare(`
       SELECT
-        AVG(lead_time) as avg_lead_time,
-        AVG(cycle_time) as avg_cycle_time,
-        AVG(story_points) as avg_story_points
+        AVG(CASE WHEN lead_time IS NOT NULL AND lead_time > 0 THEN lead_time ELSE NULL END) as avg_lead_time,
+        AVG(CASE WHEN cycle_time IS NOT NULL AND cycle_time > 0 THEN cycle_time ELSE NULL END) as avg_cycle_time,
+        AVG(CASE WHEN story_points IS NOT NULL AND story_points > 0 THEN story_points ELSE NULL END) as avg_story_points
       FROM jira_tickets
-      WHERE case_study_id = ? AND resolved_at IS NOT NULL
+      WHERE case_study_id = ?
     `);
 
     const row = stmt.get(caseStudyId) as {
@@ -289,7 +316,7 @@ export class JiraTicketRepository {
       reporterName: row.reporter_name || undefined,
       sprintId: row.sprint_id || undefined,
       sprintName: row.sprint_name || undefined,
-      storyPoints: row.story_points || undefined,
+      storyPoints: row.story_points ?? undefined,
       createdAt: parseDate(row.created_at) || new Date(),
       updatedAt: parseDate(row.updated_at) || new Date(),
       resolvedAt: parseDate(row.resolved_at),

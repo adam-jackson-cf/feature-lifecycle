@@ -58,7 +58,9 @@ export class MetricsService {
    */
   async getSprintVelocity(caseStudyId: string, sprintId: string): Promise<number> {
     const tickets = this.jiraTicketRepo.findBySprint(caseStudyId, sprintId);
-    const completedTickets = tickets.filter((t) => t.statusCategory === 'Done' && t.storyPoints);
+    const completedTickets = tickets.filter(
+      (t) => t.statusCategory === 'Done' && t.storyPoints !== undefined && t.storyPoints !== null
+    );
 
     return completedTickets.reduce((sum, ticket) => sum + (ticket.storyPoints || 0), 0);
   }
@@ -135,25 +137,47 @@ export class MetricsService {
 
     for (const ticket of tickets) {
       const ticketEvents = events.filter((e) => e.ticketKey === ticket.jiraKey);
-      const statusEvents = ticketEvents.filter(
-        (e) => e.eventType === 'status_changed' && e.eventSource === 'jira'
-      );
+      const statusEvents = ticketEvents
+        .filter((e) => e.eventType === 'status_changed' && e.eventSource === 'jira')
+        .sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
 
-      // Calculate time in "In Progress" vs "To Do" / "Done"
-      for (let i = 0; i < statusEvents.length - 1; i++) {
+      if (statusEvents.length === 0) {
+        // If no status events, use ticket creation to current status
+        // If in progress, count from creation as active time
+        if (ticket.statusCategory === 'In Progress') {
+          const timeDiff = calculateTimeDiff(ticket.createdAt, ticket.updatedAt);
+          totalActiveTime += timeDiff;
+        }
+        continue;
+      }
+
+      // Calculate time in each status
+      for (let i = 0; i < statusEvents.length; i++) {
         const currentEvent = statusEvents[i];
         const nextEvent = statusEvents[i + 1];
-        const timeDiff = calculateTimeDiff(currentEvent.eventDate, nextEvent.eventDate);
+        const endDate = nextEvent ? nextEvent.eventDate : ticket.updatedAt;
+        const timeDiff = calculateTimeDiff(currentEvent.eventDate, endDate);
 
-        const toStatus = currentEvent.details.toStatus || '';
-        if (
-          toStatus.toLowerCase().includes('progress') ||
-          toStatus.toLowerCase() === 'in progress'
-        ) {
+        const toStatus = (currentEvent.details.toStatus || '').toLowerCase();
+        const isActive =
+          toStatus.includes('progress') ||
+          toStatus.includes('review') ||
+          toStatus.includes('testing') ||
+          toStatus === 'in progress';
+
+        if (isActive) {
           totalActiveTime += timeDiff;
         } else {
           totalQueueTime += timeDiff;
         }
+      }
+
+      // Also account for time from ticket creation to first status change
+      if (statusEvents.length > 0) {
+        const firstStatusEvent = statusEvents[0];
+        const timeFromCreation = calculateTimeDiff(ticket.createdAt, firstStatusEvent.eventDate);
+        // Initial state is usually queue time (To Do)
+        totalQueueTime += timeFromCreation;
       }
     }
 
@@ -171,24 +195,24 @@ export class MetricsService {
    * Get complexity breakdown by size/oversize and discipline
    */
   async getComplexityBreakdown(caseStudyId: string): Promise<{
-    bySize: Map<string, number>;
-    byDiscipline: Map<string, number>;
+    bySize: Record<string, number>;
+    byDiscipline: Record<string, number>;
     oversize: number;
   }> {
     const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
 
-    const bySize = new Map<string, number>();
-    const byDiscipline = new Map<string, number>();
+    const bySize: Record<string, number> = {};
+    const byDiscipline: Record<string, number> = {};
     let oversize = 0;
 
     for (const ticket of tickets) {
       // Group by complexity size (if available)
-      const size = (ticket as unknown as { complexitySize?: string }).complexitySize || 'unknown';
-      bySize.set(size, (bySize.get(size) || 0) + 1);
+      const size = ticket.complexitySize || 'unknown';
+      bySize[size] = (bySize[size] || 0) + 1;
 
       // Group by discipline (if available)
-      const discipline = (ticket as unknown as { discipline?: string }).discipline || 'unknown';
-      byDiscipline.set(discipline, (byDiscipline.get(discipline) || 0) + 1);
+      const discipline = ticket.discipline || 'unknown';
+      byDiscipline[discipline] = (byDiscipline[discipline] || 0) + 1;
 
       // Count oversize tickets (if available)
       const isOversize = (ticket as unknown as { oversizeFlag?: boolean }).oversizeFlag || false;

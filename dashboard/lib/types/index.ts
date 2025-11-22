@@ -30,6 +30,12 @@ export interface CaseStudy {
   errorMessage?: string;
 }
 
+export interface SprintSummary {
+  id: string;
+  name?: string;
+  ticketCount: number;
+}
+
 export interface JiraTicket {
   id: string; // UUID (internal)
   caseStudyId: string;
