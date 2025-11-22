@@ -30,7 +30,8 @@ export class DisciplineService {
       }
     }
 
-    return rules.default;
+    const fallback = this.fallbackHeuristics(normalizedLabels, normalizedComponents);
+    return fallback || rules.default;
   }
 
   /**
@@ -59,6 +60,9 @@ export class DisciplineService {
         }
       }
     }
+
+    const fallback = this.fallbackHeuristics(labels, components, repoPath);
+    if (fallback) return fallback;
 
     return rules.default;
   }
@@ -127,5 +131,27 @@ export class DisciplineService {
     }
 
     return false;
+  }
+
+  private fallbackHeuristics(
+    labels: string[],
+    components: string[],
+    repoPath?: string
+  ): string | null {
+    const haystack = [...labels, ...components].join(' ');
+    if (/frontend|ui|web/i.test(haystack)) return 'frontend';
+    if (
+      /android|ios|mobile/i.test(haystack) ||
+      (repoPath && /mobile|android|ios/i.test(repoPath))
+    ) {
+      return 'mobile';
+    }
+    if (
+      /api|backend|server|service/i.test(haystack) ||
+      (repoPath && /api|server/i.test(repoPath))
+    ) {
+      return 'backend';
+    }
+    return null;
   }
 }
