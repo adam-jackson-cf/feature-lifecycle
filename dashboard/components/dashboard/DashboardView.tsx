@@ -33,11 +33,11 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{caseStudy.name}</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             {caseStudy.jiraProjectKey} • {caseStudy.githubOwner}/{caseStudy.githubRepo}
           </p>
         </div>
@@ -57,18 +57,14 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
         <LeadTimeChart caseStudyId={caseStudyId} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 mt-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <StatusDistribution caseStudyId={caseStudyId} />
         <VelocityChart caseStudyId={caseStudyId} />
       </div>
 
-      <div className="mt-4">
-        <EffortComplexityView caseStudyId={caseStudyId} />
-      </div>
+      <EffortComplexityView caseStudyId={caseStudyId} />
 
-      <div className="mt-4">
-        <TimelineView caseStudyId={caseStudyId} />
-      </div>
+      <TimelineView caseStudyId={caseStudyId} />
     </div>
   );
 }
