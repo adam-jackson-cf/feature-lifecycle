@@ -1,6 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { DataSet } from 'vis-data/peer';
+import { Timeline } from 'vis-timeline/standalone';
+import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTimeline } from '@/lib/hooks/useTimeline';
 
@@ -8,14 +12,13 @@ interface TimelineViewProps {
   caseStudyId: string;
 }
 
-// Add Badge import
-import { Badge } from '@/components/ui/badge';
-
 export function TimelineView({ caseStudyId }: TimelineViewProps) {
   const { data: timeline, isLoading } = useTimeline(caseStudyId);
   const [filterDiscipline, setFilterDiscipline] = useState<string>('all');
   const [filterComplexity, setFilterComplexity] = useState<string>('all');
   const [filterAI, setFilterAI] = useState<boolean | null>(null);
+  const timelineContainerRef = useRef<HTMLDivElement | null>(null);
+  const timelineInstance = useRef<Timeline | null>(null);
 
   useEffect(() => {
     try {
@@ -44,12 +47,6 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
     localStorage.setItem(`timelineFilters:${caseStudyId}`, JSON.stringify(payload));
   }, [caseStudyId, filterAI, filterComplexity, filterDiscipline]);
 
-  if (isLoading) {
-    return <div>Loading timeline...</div>;
-  }
-
-  // TODO: Integrate vis-timeline for visualization
-  // For now, show a simple list
   const filteredTimeline = timeline?.filter((event) => {
     const eventDiscipline = (event as unknown as { discipline?: string }).discipline;
     const eventComplexity = (event as unknown as { complexitySize?: string }).complexitySize;
@@ -67,15 +64,63 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
     return true;
   });
 
+  const timelineItems = useMemo(() => {
+    return (
+      filteredTimeline?.map((event) => {
+        const eventDate =
+          event.eventDate instanceof Date ? event.eventDate : new Date(event.eventDate);
+        return {
+          id: event.id,
+          group: event.ticketKey,
+          content: `<div class="text-xs font-semibold">${event.eventType.replace(/_/g, ' ')}</div>`,
+          start: eventDate,
+          title: `${event.ticketKey} • ${event.eventType}`,
+        };
+      }) || []
+    );
+  }, [filteredTimeline]);
+
+  const timelineGroups = useMemo(() => {
+    const keys = filteredTimeline
+      ? Array.from(new Set(filteredTimeline.map((e) => e.ticketKey)))
+      : [];
+    return keys.map((key) => ({ id: key, content: key }));
+  }, [filteredTimeline]);
+
+  useEffect(() => {
+    if (!timelineContainerRef.current || timelineItems.length === 0) return;
+
+    const items = new DataSet(timelineItems);
+    const groups = new DataSet(timelineGroups);
+
+    if (!timelineInstance.current) {
+      timelineInstance.current = new Timeline(timelineContainerRef.current, items, groups, {
+        stack: true,
+        orientation: 'top',
+        showCurrentTime: true,
+        zoomKey: 'ctrlKey',
+        margin: { item: 12, axis: 18 },
+      });
+    } else {
+      timelineInstance.current.setItems(items);
+      timelineInstance.current.setGroups(groups);
+    }
+
+    return () => {
+      timelineInstance.current?.destroy();
+      timelineInstance.current = null;
+    };
+  }, [timelineItems, timelineGroups]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Lifecycle Timeline</CardTitle>
-        <div className="flex gap-4 mt-4">
+        <div className="mt-4 flex flex-wrap gap-3">
           <select
             value={filterDiscipline}
             onChange={(e) => setFilterDiscipline(e.target.value)}
-            className="px-3 py-1 border rounded"
+            className="rounded-md border border-input bg-card px-3 py-2 text-sm"
           >
             <option value="all">All Disciplines</option>
             <option value="backend">Backend</option>
@@ -85,7 +130,7 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
           <select
             value={filterComplexity}
             onChange={(e) => setFilterComplexity(e.target.value)}
-            className="px-3 py-1 border rounded"
+            className="rounded-md border border-input bg-card px-3 py-2 text-sm"
           >
             <option value="all">All Sizes</option>
             <option value="XS">XS</option>
@@ -100,7 +145,7 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
               const value = e.target.value;
               setFilterAI(value === 'all' ? null : value === 'ai');
             }}
-            className="px-3 py-1 border rounded"
+            className="rounded-md border border-input bg-card px-3 py-2 text-sm"
           >
             <option value="all">All</option>
             <option value="ai">AI-assisted</option>
@@ -109,37 +154,48 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {!timeline || timeline.length === 0 ? (
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Loading timeline…</div>
+        ) : !timeline || timeline.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No timeline events found for this case study.
           </div>
         ) : filteredTimeline && filteredTimeline.length > 0 ? (
-          <div className="space-y-2">
-            {filteredTimeline.map((event) => {
-              const eventDate =
-                event.eventDate instanceof Date ? event.eventDate : new Date(event.eventDate);
-              return (
-                <div key={event.id} className="flex items-center gap-4 p-2 border rounded-lg">
-                  <span className="text-sm text-muted-foreground">
-                    {eventDate.toLocaleDateString()}
-                  </span>
-                  <Badge variant={event.eventSource === 'jira' ? 'default' : 'secondary'}>
-                    {event.eventSource.toUpperCase()}
-                  </Badge>
-                  <span className="font-medium">{event.ticketKey}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {event.eventType.replace(/_/g, ' ')}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="space-y-3">
+            <section
+              ref={timelineContainerRef}
+              className="h-[360px] w-full rounded-lg border bg-card"
+              aria-label="Interactive timeline"
+            ></section>
+            <div className="hidden text-sm text-muted-foreground md:block">
+              Tip: hold Ctrl/Cmd while scrolling to zoom. Drag to pan.
+            </div>
+            <div className="space-y-2">
+              {filteredTimeline.map((event) => {
+                const eventDate =
+                  event.eventDate instanceof Date ? event.eventDate : new Date(event.eventDate);
+                return (
+                  <div key={event.id} className="flex items-center gap-4 rounded-lg border p-2">
+                    <span className="text-sm text-muted-foreground">
+                      {eventDate.toLocaleDateString()}
+                    </span>
+                    <Badge variant={event.eventSource === 'jira' ? 'default' : 'secondary'}>
+                      {event.eventSource.toUpperCase()}
+                    </Badge>
+                    <span className="font-medium">{event.ticketKey}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {event.eventType.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             No events match the selected filters.
           </div>
         )}
-        {/* TODO: Add vis-timeline integration */}
       </CardContent>
     </Card>
   );
