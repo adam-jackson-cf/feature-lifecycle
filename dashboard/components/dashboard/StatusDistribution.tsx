@@ -19,7 +19,7 @@ type PieDatum = StatusDatum & Record<string, unknown>;
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export function StatusDistribution({ caseStudyId }: StatusDistributionProps) {
-  const { data, isLoading } = useQuery<StatusDatum[]>({
+  const { data, isLoading, error } = useQuery<StatusDatum[]>({
     queryKey: ['status-distribution', caseStudyId],
     queryFn: async (): Promise<StatusDatum[]> => {
       const response = await fetch(`/api/metrics/${caseStudyId}/status-distribution`);
@@ -39,6 +39,19 @@ export function StatusDistribution({ caseStudyId }: StatusDistributionProps) {
           <CardTitle>Status Distribution</CardTitle>
         </CardHeader>
         <CardContent>Loading...</CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Status Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-destructive">
+          Unable to load status distribution. Please try again.
+        </CardContent>
       </Card>
     );
   }

@@ -9,7 +9,7 @@ interface CycleTimeChartProps {
 }
 
 export function CycleTimeChart({ caseStudyId }: CycleTimeChartProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['cycle-time', caseStudyId],
     queryFn: async () => {
       const response = await fetch(`/api/metrics/${caseStudyId}/cycle-time`);
@@ -30,13 +30,40 @@ export function CycleTimeChart({ caseStudyId }: CycleTimeChartProps) {
     );
   }
 
-  // Transform data for chart
-  const chartData = data
-    ? data.map((item: { ticketKey: string; cycleTime: number }) => ({
-        ticket: item.ticketKey,
-        days: Math.floor(item.cycleTime / (1000 * 60 * 60 * 24)),
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cycle Time Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-destructive">
+          Unable to load cycle time data. Please try again.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Transform data for chart - API returns { tickets: [...] }
+  const tickets = data?.tickets || [];
+  const chartData = Array.isArray(tickets)
+    ? tickets.map((item: { key: string; cycleTime: number }) => ({
+        ticket: item.key,
+        days: Math.floor((item.cycleTime || 0) / (1000 * 60 * 60 * 24)),
       }))
     : [];
+
+  if (chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cycle Time Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          No cycle time data available yet.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

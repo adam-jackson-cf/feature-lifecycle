@@ -9,7 +9,7 @@ interface VelocityChartProps {
 }
 
 export function VelocityChart({ caseStudyId }: VelocityChartProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['velocity', caseStudyId],
     queryFn: async () => {
       const response = await fetch(`/api/metrics/${caseStudyId}/velocity`);
@@ -30,7 +30,33 @@ export function VelocityChart({ caseStudyId }: VelocityChartProps) {
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Sprint Velocity</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-destructive">
+          Unable to load velocity. Select a sprint or try again.
+        </CardContent>
+      </Card>
+    );
+  }
+
   const chartData = data || [];
+
+  if (!Array.isArray(chartData) || chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Sprint Velocity</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          No sprint velocity available yet. Choose a sprint or add story points to your tickets.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

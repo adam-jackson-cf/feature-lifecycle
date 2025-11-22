@@ -18,7 +18,11 @@ interface DashboardViewProps {
 
 export function DashboardView({ caseStudyId }: DashboardViewProps) {
   const { data: caseStudy, isLoading: caseStudyLoading } = useCaseStudy(caseStudyId || '');
-  const { data: metrics, isLoading: metricsLoading } = useMetrics(caseStudyId || '');
+  const {
+    data: metrics,
+    isLoading: metricsLoading,
+    error: metricsError,
+  } = useMetrics(caseStudyId || '');
 
   if (!caseStudyId) {
     return <div>Loading...</div>;
@@ -34,23 +38,36 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">{caseStudy.name}</h1>
           <p className="text-muted-foreground mt-2">
             {caseStudy.jiraProjectKey} • {caseStudy.githubOwner}/{caseStudy.githubRepo}
           </p>
         </div>
-        <Link href={`/case-studies/${caseStudyId}/timeline`}>
-          <Button variant="outline">View Full Timeline</Button>
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="outline">
+            <a
+              href={`/api/metrics/${caseStudyId}/exports?format=csv`}
+              aria-label="Export dashboard data as CSV"
+              download
+            >
+              Export CSV
+            </a>
+          </Button>
+          <Link href={`/case-studies/${caseStudyId}/timeline`}>
+            <Button variant="secondary">View Full Timeline</Button>
+          </Link>
+        </div>
       </div>
 
-      {metricsLoading ? (
-        <div>Loading metrics...</div>
-      ) : metrics ? (
-        <MetricsCards metrics={metrics} />
-      ) : null}
+      {metricsLoading && <div className="text-muted-foreground">Loading metrics...</div>}
+      {metricsError && (
+        <div className="rounded-lg border border-dashed bg-card/60 p-4 text-sm text-destructive">
+          Failed to load metrics. Please retry or check your connection.
+        </div>
+      )}
+      {metrics && <MetricsCards metrics={metrics} />}
 
       <div className="grid gap-4 md:grid-cols-2">
         <CycleTimeChart caseStudyId={caseStudyId} />
