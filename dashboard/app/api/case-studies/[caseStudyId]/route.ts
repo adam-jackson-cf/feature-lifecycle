@@ -3,10 +3,13 @@ import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 
 const caseStudyRepository = new CaseStudyRepository();
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ caseStudyId: string }> }
+) {
   try {
-    const { id } = await params;
-    const caseStudy = caseStudyRepository.findById(id);
+    const { caseStudyId } = await params;
+    const caseStudy = caseStudyRepository.findById(caseStudyId);
 
     if (!caseStudy) {
       return NextResponse.json({ error: 'Case study not found' }, { status: 404 });
@@ -21,11 +24,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ caseStudyId: string }> }
 ) {
   try {
-    const { id } = await params;
-    const deleted = caseStudyRepository.delete(id);
+    const { caseStudyId } = await params;
+    const deleted = caseStudyRepository.delete(caseStudyId);
 
     if (!deleted) {
       return NextResponse.json({ error: 'Case study not found' }, { status: 404 });
