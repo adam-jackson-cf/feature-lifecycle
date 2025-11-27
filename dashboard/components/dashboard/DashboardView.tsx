@@ -9,6 +9,7 @@ import { DataQualityView } from './DataQualityView';
 import { EffortComplexityView } from './EffortComplexityView';
 import { LeadTimeChart } from './LeadTimeChart';
 import { MetricsCards } from './MetricsCards';
+import { PhaseDistributionView } from './PhaseDistributionView';
 import { StatusDistribution } from './StatusDistribution';
 import { TimelineView } from './TimelineView';
 import { VelocityChart } from './VelocityChart';
@@ -56,6 +57,9 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
               Export CSV
             </a>
           </Button>
+          <Link href={`/data-explorer?caseStudyId=${caseStudyId}`}>
+            <Button variant="outline">Data Explorer</Button>
+          </Link>
           <Link href={`/case-studies/${caseStudyId}/timeline`}>
             <Button variant="secondary">View Full Timeline</Button>
           </Link>
@@ -81,6 +85,8 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
       </div>
 
       <EffortComplexityView caseStudyId={caseStudyId} />
+
+      <PhaseDistributionView caseStudyId={caseStudyId} />
 
       <DataQualityView caseStudyId={caseStudyId} />
 

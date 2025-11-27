@@ -96,6 +96,32 @@ function runMigrations(database: Database.Database): void {
   } catch (error) {
     console.warn('Migration warning (002):', error);
   }
+
+  // Migration 003: override columns for manual corrections
+  try {
+    const tableInfo = database.prepare('PRAGMA table_info(jira_tickets)').all() as Array<{
+      name: string;
+    }>;
+    const hasPhaseOverride = tableInfo.some((col) => col.name === 'phase_override');
+    if (!hasPhaseOverride) {
+      const file003 = readFileSync(join(migrationsDir, '003_add_override_columns.sql'), 'utf-8');
+      // Execute each ALTER TABLE separately since SQLite doesn't support multiple in one statement
+      const statements = file003
+        .split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      for (const statement of statements) {
+        try {
+          database.exec(statement);
+        } catch (stmtError) {
+          // Column might already exist from partial migration
+          console.warn('Migration 003 statement warning:', stmtError);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Migration warning (003):', error);
+  }
 }
 
 // Don't initialize on module load - let it be lazy

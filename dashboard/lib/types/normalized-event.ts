@@ -17,6 +17,12 @@ export interface NormalizedEvent {
   complexitySize?: 'XS' | 'S' | 'M' | 'L' | 'XL';
   details?: Record<string, unknown>;
   createdAt: Date;
+
+  // Override columns (manual corrections - NULL = use derived/original)
+  phaseOverride?: string;
+  disciplineOverride?: string;
+  excludedFromMetrics?: boolean;
+  overrideModifiedAt?: Date;
 }
 
 export interface NormalizedEventRow {

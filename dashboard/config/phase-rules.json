@@ -1,0 +1,108 @@
+{
+  "disciplineMapping": {
+    "backend": "development",
+    "frontend": "development",
+    "mobile": "development",
+    "data": "development",
+    "devops": "deployment",
+    "qa": "testing",
+    "unknown": "development"
+  },
+  "labelOverrides": [
+    {
+      "phase": "discovery",
+      "patterns": [
+        "research",
+        "user-research",
+        "discovery",
+        "spike",
+        "exploration",
+        "poc",
+        "proof-of-concept",
+        "investigation"
+      ]
+    },
+    {
+      "phase": "definition",
+      "patterns": [
+        "planning",
+        "definition",
+        "requirements",
+        "spec",
+        "prd",
+        "refinement",
+        "grooming",
+        "scoping",
+        "estimation"
+      ]
+    },
+    {
+      "phase": "design",
+      "patterns": [
+        "design",
+        "ux",
+        "ui-design",
+        "wireframe",
+        "prototype",
+        "mockup",
+        "figma",
+        "visual-design",
+        "interaction-design"
+      ]
+    },
+    {
+      "phase": "development",
+      "patterns": [
+        "development",
+        "implementation",
+        "coding",
+        "feature",
+        "enhancement",
+        "refactor",
+        "tech-debt"
+      ]
+    },
+    {
+      "phase": "testing",
+      "patterns": [
+        "testing",
+        "qa",
+        "test",
+        "quality",
+        "e2e",
+        "integration-test",
+        "unit-test",
+        "regression",
+        "acceptance"
+      ]
+    },
+    {
+      "phase": "deployment",
+      "patterns": [
+        "deployment",
+        "release",
+        "deploy",
+        "ci-cd",
+        "infrastructure",
+        "devops",
+        "rollout",
+        "launch"
+      ]
+    },
+    {
+      "phase": "measure",
+      "patterns": [
+        "measure",
+        "analytics",
+        "metrics",
+        "monitoring",
+        "observability",
+        "a-b-test",
+        "experiment",
+        "tracking"
+      ]
+    }
+  ],
+  "default": "development",
+  "priority": ["labels", "discipline"]
+}

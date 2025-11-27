@@ -15,16 +15,22 @@ export function Header() {
             Case Studies
           </Link>
           <Link
+            href="/aggregate"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Overview
+          </Link>
+          <Link
+            href="/data-explorer"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Data Explorer
+          </Link>
+          <Link
             href="/import/new"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             New Import
-          </Link>
-          <Link
-            href="/rules"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Rules
           </Link>
         </nav>
       </div>

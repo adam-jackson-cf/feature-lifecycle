@@ -81,6 +81,14 @@ export interface JiraTicket {
   aiFlag?: boolean;
   oversizeFlag?: boolean;
 
+  // Override columns (manual corrections - NULL = use derived/original)
+  phaseOverride?: string;
+  disciplineOverride?: string;
+  complexityOverride?: 'XS' | 'S' | 'M' | 'L' | 'XL';
+  excludedFromMetrics?: boolean;
+  customLabels?: string[];
+  overrideModifiedAt?: Date;
+
   // Raw data (for reference)
   rawJiraData: object;
 }
@@ -176,6 +184,12 @@ export interface LifecycleEvent {
   createdAt: Date;
   discipline?: string;
   complexitySize?: 'XS' | 'S' | 'M' | 'L' | 'XL';
+
+  // Override columns (manual corrections - NULL = use derived/original)
+  phaseOverride?: string;
+  disciplineOverride?: string;
+  excludedFromMetrics?: boolean;
+  overrideModifiedAt?: Date;
 }
 
 export interface GitHubCommit {
@@ -302,6 +316,13 @@ export interface JiraTicketRow {
   discipline: string | null;
   ai_flag: number | null;
   raw_jira_data: string; // JSON string
+  // Override columns
+  phase_override: string | null;
+  discipline_override: string | null;
+  complexity_override: string | null;
+  excluded_from_metrics: number | null;
+  custom_labels: string | null; // JSON array string
+  override_modified_at: string | null;
 }
 
 export interface LifecycleEventRow {
@@ -317,6 +338,11 @@ export interface LifecycleEventRow {
   discipline: string | null;
   complexity_size: string | null;
   created_at: string;
+  // Override columns
+  phase_override: string | null;
+  discipline_override: string | null;
+  excluded_from_metrics: number | null;
+  override_modified_at: string | null;
 }
 
 export interface GitHubPullRequestRow {
@@ -394,4 +420,94 @@ export interface DisciplineEffortMetric {
   efficiencyPercent: number;
   oversizeRate: number;
   reopenCount: number;
+}
+
+// Lifecycle phases for effort distribution
+export type LifecyclePhase =
+  | 'discovery'
+  | 'definition'
+  | 'design'
+  | 'development'
+  | 'testing'
+  | 'deployment'
+  | 'measure'
+  | 'unknown';
+
+export const LIFECYCLE_PHASES: LifecyclePhase[] = [
+  'discovery',
+  'definition',
+  'design',
+  'development',
+  'testing',
+  'deployment',
+  'measure',
+];
+
+export const LIFECYCLE_PHASE_LABELS: Record<LifecyclePhase, string> = {
+  discovery: 'Discovery & Research',
+  definition: 'Definition & Planning',
+  design: 'Design',
+  development: 'Development',
+  testing: 'Testing & QA',
+  deployment: 'Deployment',
+  measure: 'Measure',
+  unknown: 'Unknown',
+};
+
+export const LIFECYCLE_PHASE_COLORS: Record<LifecyclePhase, string> = {
+  discovery: '#8B5CF6', // Purple
+  definition: '#3B82F6', // Blue
+  design: '#EC4899', // Pink
+  development: '#10B981', // Green
+  testing: '#F59E0B', // Amber
+  deployment: '#EF4444', // Red
+  measure: '#6366F1', // Indigo
+  unknown: '#9CA3AF', // Gray
+};
+
+export interface PhaseEffortMetric {
+  phase: LifecyclePhase;
+  label: string;
+  ticketCount: number;
+  totalHours: number;
+  percentage: number;
+  color: string;
+}
+
+export interface PhaseDistribution {
+  phases: PhaseEffortMetric[];
+  totalHours: number;
+  totalTickets: number;
+}
+
+// Override status for data explorer
+export type OverrideStatus = 'original' | 'modified' | 'excluded';
+
+export interface DataExplorerItem {
+  id: string;
+  type: 'ticket' | 'event';
+  key: string;
+  summary: string;
+  caseStudyId: string;
+
+  // Original values (from import)
+  discipline: string | null;
+  complexitySize: string | null;
+  labels: string[];
+
+  // Override values (user corrections)
+  phaseOverride: LifecyclePhase | null;
+  disciplineOverride: string | null;
+  complexityOverride: string | null;
+  customLabels: string[];
+  excludedFromMetrics: boolean;
+  overrideModifiedAt: Date | null;
+
+  // Effective values (override ?? derived ?? original)
+  effectivePhase: LifecyclePhase;
+  effectiveDiscipline: string | null;
+  effectiveComplexity: string | null;
+
+  // Status
+  overrideStatus: OverrideStatus;
 }

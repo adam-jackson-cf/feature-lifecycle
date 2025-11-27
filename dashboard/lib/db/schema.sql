@@ -56,6 +56,13 @@ CREATE TABLE IF NOT EXISTS jira_tickets (
   discipline TEXT,
   ai_flag INTEGER DEFAULT 0,
   raw_jira_data TEXT NOT NULL, -- JSON
+  -- Override columns for manual corrections (NULL = use derived/original value)
+  phase_override TEXT,
+  discipline_override TEXT,
+  complexity_override TEXT CHECK(complexity_override IN ('XS', 'S', 'M', 'L', 'XL')),
+  excluded_from_metrics INTEGER DEFAULT 0,
+  custom_labels TEXT, -- JSON array of user-added tags
+  override_modified_at DATETIME,
   FOREIGN KEY (case_study_id) REFERENCES case_studies(id) ON DELETE CASCADE
 );
 
@@ -66,6 +73,8 @@ CREATE INDEX IF NOT EXISTS idx_jira_tickets_sprint ON jira_tickets(sprint_id);
 CREATE INDEX IF NOT EXISTS idx_jira_tickets_complexity_size ON jira_tickets(complexity_size);
 CREATE INDEX IF NOT EXISTS idx_jira_tickets_discipline ON jira_tickets(discipline);
 CREATE INDEX IF NOT EXISTS idx_jira_tickets_ai_flag ON jira_tickets(ai_flag);
+CREATE INDEX IF NOT EXISTS idx_jira_tickets_excluded ON jira_tickets(excluded_from_metrics);
+CREATE INDEX IF NOT EXISTS idx_jira_tickets_phase_override ON jira_tickets(phase_override);
 
 -- Lifecycle Events
 CREATE TABLE IF NOT EXISTS lifecycle_events (
@@ -81,6 +90,11 @@ CREATE TABLE IF NOT EXISTS lifecycle_events (
   discipline TEXT,
   complexity_size TEXT CHECK(complexity_size IN ('XS', 'S', 'M', 'L', 'XL')),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  -- Override columns for manual corrections
+  phase_override TEXT,
+  discipline_override TEXT,
+  excluded_from_metrics INTEGER DEFAULT 0,
+  override_modified_at DATETIME,
   FOREIGN KEY (case_study_id) REFERENCES case_studies(id) ON DELETE CASCADE
 );
 
@@ -90,6 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_lifecycle_events_date ON lifecycle_events(event_d
 CREATE INDEX IF NOT EXISTS idx_lifecycle_events_type ON lifecycle_events(event_type);
 CREATE INDEX IF NOT EXISTS idx_lifecycle_events_discipline ON lifecycle_events(discipline);
 CREATE INDEX IF NOT EXISTS idx_lifecycle_events_complexity_size ON lifecycle_events(complexity_size);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_events_excluded ON lifecycle_events(excluded_from_metrics);
 
 -- Normalized Events (canonical form)
 CREATE TABLE IF NOT EXISTS normalized_events (
@@ -105,6 +120,11 @@ CREATE TABLE IF NOT EXISTS normalized_events (
   complexity_size TEXT CHECK(complexity_size IN ('XS', 'S', 'M', 'L', 'XL')),
   details TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  -- Override columns for manual corrections
+  phase_override TEXT,
+  discipline_override TEXT,
+  excluded_from_metrics INTEGER DEFAULT 0,
+  override_modified_at DATETIME,
   FOREIGN KEY (case_study_id) REFERENCES case_studies(id) ON DELETE CASCADE
 );
 
@@ -113,6 +133,7 @@ CREATE INDEX IF NOT EXISTS idx_normalized_events_ticket ON normalized_events(tic
 CREATE INDEX IF NOT EXISTS idx_normalized_events_date ON normalized_events(occurred_at);
 CREATE INDEX IF NOT EXISTS idx_normalized_events_type ON normalized_events(event_type);
 CREATE INDEX IF NOT EXISTS idx_normalized_events_discipline ON normalized_events(discipline);
+CREATE INDEX IF NOT EXISTS idx_normalized_events_excluded ON normalized_events(excluded_from_metrics);
 
 -- GitHub Commits
 CREATE TABLE IF NOT EXISTS github_commits (

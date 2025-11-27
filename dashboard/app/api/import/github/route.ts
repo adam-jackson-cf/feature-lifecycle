@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       lifecycleEventRepo,
       caseStudyRepo,
       prRepo,
-      normalizedEventRepo
+      normalizedEventRepo,
+      process.env.GITHUB_TOKEN
     );
 
     // Import commits
