@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
@@ -15,7 +16,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ caseStu
     const jiraRepo = new JiraTicketRepository();
     const eventRepo = new LifecycleEventRepository();
     const normalizedRepo = new NormalizedEventRepository();
-    const service = new MetricsService(jiraRepo, eventRepo, normalizedRepo);
+    const prRepo = new GithubPullRequestRepository();
+    const service = new MetricsService(jiraRepo, eventRepo, normalizedRepo, prRepo);
 
     const summary = await service.getMetricsSummary(caseStudyId);
     const flow = await service.getFlowEfficiency(caseStudyId);

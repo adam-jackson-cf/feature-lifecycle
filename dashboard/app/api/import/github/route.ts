@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
+import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
@@ -31,11 +32,13 @@ export async function POST(request: NextRequest) {
 
     // Initialize services
     const lifecycleEventRepo = new LifecycleEventRepository();
+    const prRepo = new GithubPullRequestRepository();
+    const normalizedEventRepo = new NormalizedEventRepository();
     const githubImportService = new GitHubImportService(
       lifecycleEventRepo,
       caseStudyRepo,
-      undefined, // use default PR repo
-      new NormalizedEventRepository()
+      prRepo,
+      normalizedEventRepo
     );
 
     // Import commits

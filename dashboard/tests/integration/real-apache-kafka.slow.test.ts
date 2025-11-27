@@ -13,11 +13,18 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
+import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
+import { ComplexityService } from '@/lib/services/complexity.service';
+import { DisciplineService } from '@/lib/services/discipline.service';
 import { GitHubImportService } from '@/lib/services/github-import.service';
-import { JiraImportService } from '@/lib/services/jira-import.service';
+import {
+  JiraImportService,
+  loadComplexityConfig,
+  loadDisciplineConfig,
+} from '@/lib/services/jira-import.service';
 
 // Test configuration
 const JIRA_BASE_URL = 'https://issues.apache.org/jira/rest/api/2';
@@ -54,16 +61,26 @@ describe('Apache Kafka Integration Test (Real Data) [slow]', () => {
     caseStudyRepo = new CaseStudyRepository(db);
 
     // Create services
+    const complexityService = new ComplexityService();
+    const disciplineService = new DisciplineService();
+    const complexityConfig = loadComplexityConfig();
+    const disciplineConfig = loadDisciplineConfig();
+
     jiraImportService = new JiraImportService(
       jiraTicketRepo,
       lifecycleEventRepo,
       caseStudyRepo,
-      normalizedEventRepo
+      normalizedEventRepo,
+      complexityService,
+      disciplineService,
+      complexityConfig,
+      disciplineConfig
     );
+    const prRepo = new GithubPullRequestRepository(db);
     githubImportService = new GitHubImportService(
       lifecycleEventRepo,
       caseStudyRepo,
-      undefined,
+      prRepo,
       normalizedEventRepo
     );
 

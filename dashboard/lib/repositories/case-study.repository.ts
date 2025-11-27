@@ -2,8 +2,9 @@ import type Database from 'better-sqlite3';
 import { getDatabase, parseDate } from '@/lib/db';
 import type { CaseStudy, CaseStudyRow } from '@/lib/types';
 import { generateId } from '@/lib/utils';
+import type { ICaseStudyRepository } from './interfaces';
 
-export class CaseStudyRepository {
+export class CaseStudyRepository implements ICaseStudyRepository {
   private db: Database.Database;
 
   constructor(database?: Database.Database) {

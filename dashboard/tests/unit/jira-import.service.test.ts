@@ -6,7 +6,13 @@ import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
 import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
-import { JiraImportService } from '@/lib/services/jira-import.service';
+import { ComplexityService } from '@/lib/services/complexity.service';
+import { DisciplineService } from '@/lib/services/discipline.service';
+import {
+  JiraImportService,
+  loadComplexityConfig,
+  loadDisciplineConfig,
+} from '@/lib/services/jira-import.service';
 import { mockChangelog19734, mockIssues } from '@/tests/fixtures/jira/mock-issues';
 
 describe('JiraImportService', () => {
@@ -35,11 +41,20 @@ describe('JiraImportService', () => {
     caseStudyRepo = new CaseStudyRepository(db);
 
     // Create service
+    const complexityService = new ComplexityService();
+    const disciplineService = new DisciplineService();
+    const complexityConfig = loadComplexityConfig();
+    const disciplineConfig = loadDisciplineConfig();
+
     jiraImportService = new JiraImportService(
       jiraTicketRepo,
       lifecycleEventRepo,
       caseStudyRepo,
-      normalizedEventRepo
+      normalizedEventRepo,
+      complexityService,
+      disciplineService,
+      complexityConfig,
+      disciplineConfig
     );
 
     // Create a test case study

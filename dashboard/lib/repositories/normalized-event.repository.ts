@@ -2,8 +2,9 @@ import type Database from 'better-sqlite3';
 import { getDatabase, parseDate, parseJson } from '@/lib/db';
 import type { NormalizedEvent, NormalizedEventRow } from '@/lib/types';
 import { generateId, safeJsonStringify } from '@/lib/utils';
+import type { INormalizedEventRepository } from './interfaces';
 
-export class NormalizedEventRepository {
+export class NormalizedEventRepository implements INormalizedEventRepository {
   private db: Database.Database;
 
   constructor(database?: Database.Database) {

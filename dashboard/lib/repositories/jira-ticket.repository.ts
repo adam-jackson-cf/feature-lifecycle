@@ -2,8 +2,9 @@ import type Database from 'better-sqlite3';
 import { getDatabase, parseDate, parseJson } from '@/lib/db';
 import type { JiraTicket, JiraTicketRow } from '@/lib/types';
 import { generateId, safeJsonStringify } from '@/lib/utils';
+import type { IJiraTicketRepository } from './interfaces';
 
-export class JiraTicketRepository {
+export class JiraTicketRepository implements IJiraTicketRepository {
   private db: Database.Database;
 
   constructor(database?: Database.Database) {

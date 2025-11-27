@@ -2,8 +2,9 @@ import type Database from 'better-sqlite3';
 import { getDatabase, parseDate, parseJson } from '@/lib/db';
 import type { GitHubPullRequest, GitHubPullRequestRow } from '@/lib/types';
 import { generateId, safeJsonStringify } from '@/lib/utils';
+import type { IGithubPullRequestRepository } from './interfaces';
 
-export class GithubPullRequestRepository {
+export class GithubPullRequestRepository implements IGithubPullRequestRepository {
   private db: Database.Database;
 
   constructor(database?: Database.Database) {

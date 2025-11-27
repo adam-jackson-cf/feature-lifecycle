@@ -2,8 +2,9 @@ import type Database from 'better-sqlite3';
 import { getDatabase, parseDate, parseJson } from '@/lib/db';
 import type { EventDetails, LifecycleEvent, LifecycleEventRow } from '@/lib/types';
 import { generateId, safeJsonStringify } from '@/lib/utils';
+import type { ILifecycleEventRepository } from './interfaces';
 
-export class LifecycleEventRepository {
+export class LifecycleEventRepository implements ILifecycleEventRepository {
   private db: Database.Database;
 
   constructor(database?: Database.Database) {

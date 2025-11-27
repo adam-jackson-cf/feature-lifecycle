@@ -1,16 +1,19 @@
-import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
-import type { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
-import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
-import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
+import type {
+  IGithubPullRequestRepository,
+  IJiraTicketRepository,
+  ILifecycleEventRepository,
+  INormalizedEventRepository,
+} from '@/lib/repositories/interfaces';
 import { calculateEffortByDiscipline } from '@/lib/services/effort-calculator';
 import type { LifecycleEvent, MetricsSummary, NormalizedEvent } from '@/lib/types';
 import { calculateTimeDiff } from '@/lib/utils';
 
 export class MetricsService {
   constructor(
-    private jiraTicketRepo: JiraTicketRepository,
-    private lifecycleEventRepo: LifecycleEventRepository,
-    private normalizedEventRepo: NormalizedEventRepository = new NormalizedEventRepository()
+    private jiraTicketRepo: IJiraTicketRepository,
+    private lifecycleEventRepo: ILifecycleEventRepository,
+    private normalizedEventRepo: INormalizedEventRepository,
+    private prRepo: IGithubPullRequestRepository
   ) {}
 
   /**
@@ -89,7 +92,6 @@ export class MetricsService {
     const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
     const events = this.lifecycleEventRepo.findByCaseStudy(caseStudyId);
     const normalizedEvents = this.normalizedEventRepo.findByCaseStudy(caseStudyId);
-    const prRepo = new GithubPullRequestRepository();
 
     const completedTickets = tickets.filter((t) => t.statusCategory === 'Done');
     const avgMetrics = this.jiraTicketRepo.getAverageMetrics(caseStudyId);
@@ -101,7 +103,7 @@ export class MetricsService {
       (sum, ticket) => sum + (ticket.storyPoints || 0),
       0
     );
-    const prCount = prRepo.countByCaseStudy(caseStudyId);
+    const prCount = this.prRepo.countByCaseStudy(caseStudyId);
 
     return {
       totalTickets: tickets.length,

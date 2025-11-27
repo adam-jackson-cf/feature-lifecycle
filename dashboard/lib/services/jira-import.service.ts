@@ -1,12 +1,14 @@
 import { Buffer } from 'node:buffer';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
-import type { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
-import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
-import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
-import { type ComplexityConfig, ComplexityService } from '@/lib/services/complexity.service';
-import { type DisciplineRulesConfig, DisciplineService } from '@/lib/services/discipline.service';
+import type {
+  ICaseStudyRepository,
+  IJiraTicketRepository,
+  ILifecycleEventRepository,
+  INormalizedEventRepository,
+} from '@/lib/repositories/interfaces';
+import type { ComplexityConfig, ComplexityService } from '@/lib/services/complexity.service';
+import type { DisciplineRulesConfig, DisciplineService } from '@/lib/services/discipline.service';
 import type {
   EventType,
   JiraIssueFields,
@@ -19,17 +21,32 @@ import { EventType as EventTypeEnum } from '@/lib/types';
 import { calculateTimeDiff, extractTicketIds } from '@/lib/utils';
 import type { JiraChangelogHistory, JiraIssue } from '@/tests/fixtures/jira/mock-issues';
 
-export class JiraImportService {
-  private complexityService = new ComplexityService();
-  private disciplineService = new DisciplineService();
-  private complexityConfig: ComplexityConfig | null = null;
-  private disciplineConfig: DisciplineRulesConfig | null = null;
+/**
+ * Load complexity configuration from JSON file
+ */
+export function loadComplexityConfig(): ComplexityConfig {
+  const path = join(process.cwd(), 'config', 'complexity.config.json');
+  return JSON.parse(readFileSync(path, 'utf-8')) as ComplexityConfig;
+}
 
+/**
+ * Load discipline rules configuration from JSON file
+ */
+export function loadDisciplineConfig(): DisciplineRulesConfig {
+  const path = join(process.cwd(), 'config', 'discipline-rules.json');
+  return JSON.parse(readFileSync(path, 'utf-8')) as DisciplineRulesConfig;
+}
+
+export class JiraImportService {
   constructor(
-    private jiraTicketRepo: JiraTicketRepository,
-    private lifecycleEventRepo: LifecycleEventRepository,
-    private caseStudyRepo: CaseStudyRepository,
-    private normalizedEventRepo: NormalizedEventRepository = new NormalizedEventRepository()
+    private jiraTicketRepo: IJiraTicketRepository,
+    private lifecycleEventRepo: ILifecycleEventRepository,
+    private caseStudyRepo: ICaseStudyRepository,
+    private normalizedEventRepo: INormalizedEventRepository,
+    private complexityService: ComplexityService,
+    private disciplineService: DisciplineService,
+    private complexityConfig: ComplexityConfig,
+    private disciplineConfig: DisciplineRulesConfig
   ) {}
 
   /**
@@ -102,7 +119,7 @@ export class JiraImportService {
         };
         const discipline = this.getDiscipline(lite);
         const aiFlag = this.detectAIFlag(lite);
-        const complexity = this.complexityService.calculateRCS(lite, this.getComplexityConfig());
+        const complexity = this.complexityService.calculateRCS(lite, this.complexityConfig);
 
         // Convert Jira issue to our ticket format
         const ticket = this.convertIssueToTicket(issue, caseStudyId, {
@@ -356,25 +373,10 @@ export class JiraImportService {
     };
   }
 
-  private getComplexityConfig(): ComplexityConfig {
-    if (this.complexityConfig) return this.complexityConfig;
-    const path = join(process.cwd(), 'config', 'complexity.config.json');
-    this.complexityConfig = JSON.parse(readFileSync(path, 'utf-8')) as ComplexityConfig;
-    return this.complexityConfig;
-  }
-
-  private getDisciplineConfig(): DisciplineRulesConfig {
-    if (this.disciplineConfig) return this.disciplineConfig;
-    const path = join(process.cwd(), 'config', 'discipline-rules.json');
-    this.disciplineConfig = JSON.parse(readFileSync(path, 'utf-8')) as DisciplineRulesConfig;
-    return this.disciplineConfig;
-  }
-
   private getDiscipline(issue: JiraIssueLite): string {
-    const config = this.getDisciplineConfig();
     const labels = issue.fields.labels || [];
     const components = (issue.fields.components || []).map((c) => c.name || '');
-    return this.disciplineService.deriveFromArrays(labels, components, config);
+    return this.disciplineService.deriveFromArrays(labels, components, this.disciplineConfig);
   }
 
   private detectAIFlag(issue: JiraIssueLite): boolean {

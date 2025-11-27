@@ -1,8 +1,10 @@
 import { Octokit } from 'octokit';
-import type { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
-import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
-import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
-import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
+import type {
+  ICaseStudyRepository,
+  IGithubPullRequestRepository,
+  ILifecycleEventRepository,
+  INormalizedEventRepository,
+} from '@/lib/repositories/interfaces';
 import type { LifecycleEvent, NormalizedEvent } from '@/lib/types';
 import { EventType as EventTypeEnum, type GitHubPullRequest } from '@/lib/types';
 import { extractTicketIds } from '@/lib/utils';
@@ -38,10 +40,10 @@ export class GitHubImportService {
   private octokit: Octokit;
 
   constructor(
-    private lifecycleEventRepo: LifecycleEventRepository,
-    private caseStudyRepo: CaseStudyRepository,
-    private prRepo = new GithubPullRequestRepository(),
-    private normalizedEventRepo: NormalizedEventRepository = new NormalizedEventRepository(),
+    private lifecycleEventRepo: ILifecycleEventRepository,
+    private caseStudyRepo: ICaseStudyRepository,
+    private prRepo: IGithubPullRequestRepository,
+    private normalizedEventRepo: INormalizedEventRepository,
     githubToken?: string
   ) {
     this.octokit = new Octokit({ auth: githubToken });

@@ -3,7 +3,14 @@ import { z } from 'zod';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
-import { JiraImportService } from '@/lib/services/jira-import.service';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
+import { ComplexityService } from '@/lib/services/complexity.service';
+import { DisciplineService } from '@/lib/services/discipline.service';
+import {
+  JiraImportService,
+  loadComplexityConfig,
+  loadDisciplineConfig,
+} from '@/lib/services/jira-import.service';
 
 const importSchema = z.object({
   caseStudyId: z.string().uuid(),
@@ -24,7 +31,22 @@ export async function POST(request: NextRequest) {
 
     const jiraRepo = new JiraTicketRepository();
     const lifecycleRepo = new LifecycleEventRepository();
-    const service = new JiraImportService(jiraRepo, lifecycleRepo, caseStudyRepo);
+    const normalizedEventRepo = new NormalizedEventRepository();
+    const complexityService = new ComplexityService();
+    const disciplineService = new DisciplineService();
+    const complexityConfig = loadComplexityConfig();
+    const disciplineConfig = loadDisciplineConfig();
+
+    const service = new JiraImportService(
+      jiraRepo,
+      lifecycleRepo,
+      caseStudyRepo,
+      normalizedEventRepo,
+      complexityService,
+      disciplineService,
+      complexityConfig,
+      disciplineConfig
+    );
 
     await service.importIssues(data.caseStudyId, data.issues);
 
