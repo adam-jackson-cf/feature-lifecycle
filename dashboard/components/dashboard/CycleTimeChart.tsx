@@ -144,9 +144,9 @@ export function CycleTimeChart({ caseStudyId }: CycleTimeChartProps) {
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: mutedColor }} />
             <Bar dataKey="days" radius={[4, 4, 0, 0]}>
-              {chartData.map((entry) => (
+              {chartData.map((entry, index) => (
                 <Cell
-                  key={`cell-${entry.ticket}`}
+                  key={`cell-${entry.ticket}-${index}`}
                   fill={entry.days === maxDays ? accentColor : primaryColor}
                 />
               ))}
