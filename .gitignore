@@ -136,3 +136,11 @@ bun.lockb
 .swc/
 .husky/_/
 
+# Beads task database
+.beads/
+
+
+
+
+
+

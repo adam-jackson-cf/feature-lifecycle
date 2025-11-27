@@ -237,6 +237,7 @@ export interface MetricsSummary {
   totalCommits: number;
   totalPRs: number;
   velocityPoints: number;
+  disciplineEffort?: DisciplineEffortMetric[];
   flow?: {
     activeTime: number;
     queueTime: number;
@@ -379,4 +380,18 @@ export interface GitHubPullRequestRow {
   reviewers: string | null; // JSON array string
   approved_by: string | null; // JSON array string
   url: string;
+}
+
+export * from './normalized-event';
+
+export interface DisciplineEffortMetric {
+  discipline: string;
+  ticketCount: number;
+  leadTimeMedianHours: number;
+  cycleTimeMedianHours: number;
+  activeHours: number;
+  queueHours: number;
+  efficiencyPercent: number;
+  oversizeRate: number;
+  reopenCount: number;
 }

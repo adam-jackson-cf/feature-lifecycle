@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
 import { MetricsService } from '@/lib/services/metrics.service';
 
 const paramsSchema = z.object({
@@ -13,13 +14,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ caseStu
     const { caseStudyId } = paramsSchema.parse(await params);
     const jiraRepo = new JiraTicketRepository();
     const eventRepo = new LifecycleEventRepository();
-    const service = new MetricsService(jiraRepo, eventRepo);
+    const normalizedRepo = new NormalizedEventRepository();
+    const service = new MetricsService(jiraRepo, eventRepo, normalizedRepo);
 
     const summary = await service.getMetricsSummary(caseStudyId);
     const flow = await service.getFlowEfficiency(caseStudyId);
     const complexity = await service.getComplexityBreakdown(caseStudyId);
+    const disciplineEffort = await service.getDisciplineEffort(caseStudyId);
 
-    return NextResponse.json({ ...summary, flow, complexity });
+    return NextResponse.json({ ...summary, flow, complexity, disciplineEffort });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation error' }, { status: 400 });

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import type { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
 import { type ComplexityConfig, ComplexityService } from '@/lib/services/complexity.service';
 import { type DisciplineRulesConfig, DisciplineService } from '@/lib/services/discipline.service';
 import type {
@@ -12,6 +13,7 @@ import type {
   JiraIssueLite,
   JiraTicket,
   LifecycleEvent,
+  NormalizedEvent,
 } from '@/lib/types';
 import { EventType as EventTypeEnum } from '@/lib/types';
 import { calculateTimeDiff, extractTicketIds } from '@/lib/utils';
@@ -26,7 +28,8 @@ export class JiraImportService {
   constructor(
     private jiraTicketRepo: JiraTicketRepository,
     private lifecycleEventRepo: LifecycleEventRepository,
-    private caseStudyRepo: CaseStudyRepository
+    private caseStudyRepo: CaseStudyRepository,
+    private normalizedEventRepo: NormalizedEventRepository = new NormalizedEventRepository()
   ) {}
 
   /**
@@ -152,6 +155,8 @@ export class JiraImportService {
       // Batch insert tickets and events
       this.jiraTicketRepo.createMany(tickets);
       this.lifecycleEventRepo.createMany(events);
+      this.normalizedEventRepo.createMany(events.map((event) => this.toNormalizedEvent(event)));
+      this.normalizedEventRepo.createMany(events.map((event) => this.toNormalizedEvent(event)));
 
       // Fetch and import changelogs for status change events
       for (const issue of issues) {
@@ -233,6 +238,8 @@ export class JiraImportService {
 
     if (events.length > 0) {
       this.lifecycleEventRepo.createMany(events);
+      this.normalizedEventRepo.createMany(events.map((event) => this.toNormalizedEvent(event)));
+      this.normalizedEventRepo.createMany(events.map((event) => this.toNormalizedEvent(event)));
 
       // Update event count in case study
       const caseStudy = this.caseStudyRepo.findById(caseStudyId);
@@ -378,5 +385,22 @@ export class JiraImportService {
       /ai-coauthored|ai-assisted|copilot/.test(text) ||
       extractTicketIds(text).some((id) => id === 'AI')
     );
+  }
+
+  private toNormalizedEvent(
+    event: Omit<LifecycleEvent, 'id' | 'createdAt'>
+  ): Omit<NormalizedEvent, 'id' | 'createdAt'> {
+    return {
+      caseStudyId: event.caseStudyId,
+      ticketKey: event.ticketKey,
+      eventType: event.eventType,
+      eventSource: event.eventSource,
+      occurredAt: event.eventDate,
+      actorName: event.actorName,
+      actorId: event.actorId,
+      discipline: event.discipline,
+      complexitySize: event.complexitySize,
+      details: event.details as Record<string, unknown>,
+    };
   }
 }

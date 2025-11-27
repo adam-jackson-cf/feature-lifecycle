@@ -1,4 +1,24 @@
-# Session Notes (latest changes summary)
+# Recent Development Activity
+
+  Active Themes (last 30 days):
+  - Time-in-status and churn metrics implementation
+  - Interactive timeline visualization
+  - Data quality view with sticky filters
+  - PR import and counting in metrics
+  - Sprint-aware velocity flow
+  - Export control and chart empty states
+  - Dashboard theming (mint theme)
+  - Migration to Bun, Next.js 16, and Ultracite
+
+  Recent Commits:
+  - 6f3eb70 Fix Next.js routing conflict by renaming case-studies [id] to [caseStudyId]
+  - 32de052 Add time-in-status and churn metrics
+  - 0119631 Stabilize tests by stubbing changelog fetch and add size total
+  - 9882424 Add interactive timeline visualization
+  - 85b3ca9 Add data quality view and sticky filters
+  - 67e2ddb Import PRs and count them in metrics
+
+## Session Notes (latest changes summary)
 
 Date: 2025-11-22
 

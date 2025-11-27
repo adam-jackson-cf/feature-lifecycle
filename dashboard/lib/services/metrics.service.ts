@@ -1,13 +1,16 @@
 import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import type { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
-import type { LifecycleEvent, MetricsSummary } from '@/lib/types';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
+import { calculateEffortByDiscipline } from '@/lib/services/effort-calculator';
+import type { LifecycleEvent, MetricsSummary, NormalizedEvent } from '@/lib/types';
 import { calculateTimeDiff } from '@/lib/utils';
 
 export class MetricsService {
   constructor(
     private jiraTicketRepo: JiraTicketRepository,
-    private lifecycleEventRepo: LifecycleEventRepository
+    private lifecycleEventRepo: LifecycleEventRepository,
+    private normalizedEventRepo: NormalizedEventRepository = new NormalizedEventRepository()
   ) {}
 
   /**
@@ -85,6 +88,7 @@ export class MetricsService {
   async getMetricsSummary(caseStudyId: string): Promise<MetricsSummary> {
     const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
     const events = this.lifecycleEventRepo.findByCaseStudy(caseStudyId);
+    const normalizedEvents = this.normalizedEventRepo.findByCaseStudy(caseStudyId);
     const prRepo = new GithubPullRequestRepository();
 
     const completedTickets = tickets.filter((t) => t.statusCategory === 'Done');
@@ -107,6 +111,7 @@ export class MetricsService {
       totalCommits: commitEvents.length,
       totalPRs: prCount,
       velocityPoints,
+      disciplineEffort: calculateEffortByDiscipline(tickets, normalizedEvents as NormalizedEvent[]),
     };
   }
 
@@ -281,5 +286,11 @@ export class MetricsService {
 
     // Ensure tickets with zero changes are counted in average denominator above.
     return { totalStatusChanges, avgStatusChangesPerTicket };
+  }
+
+  async getDisciplineEffort(caseStudyId: string) {
+    const tickets = this.jiraTicketRepo.findByCaseStudy(caseStudyId);
+    const events = this.normalizedEventRepo.findByCaseStudy(caseStudyId);
+    return calculateEffortByDiscipline(tickets, events as NormalizedEvent[]);
   }
 }

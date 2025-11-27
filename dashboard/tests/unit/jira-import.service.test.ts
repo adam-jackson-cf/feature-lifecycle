@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
 import { JiraImportService } from '@/lib/services/jira-import.service';
 import { mockChangelog19734, mockIssues } from '@/tests/fixtures/jira/mock-issues';
 
@@ -13,6 +14,7 @@ describe('JiraImportService', () => {
   let jiraImportService: JiraImportService;
   let jiraTicketRepo: JiraTicketRepository;
   let lifecycleEventRepo: LifecycleEventRepository;
+  let normalizedEventRepo: NormalizedEventRepository;
   let caseStudyRepo: CaseStudyRepository;
   let caseStudyId: string;
 
@@ -29,10 +31,16 @@ describe('JiraImportService', () => {
     // Create repositories
     jiraTicketRepo = new JiraTicketRepository(db);
     lifecycleEventRepo = new LifecycleEventRepository(db);
+    normalizedEventRepo = new NormalizedEventRepository(db);
     caseStudyRepo = new CaseStudyRepository(db);
 
     // Create service
-    jiraImportService = new JiraImportService(jiraTicketRepo, lifecycleEventRepo, caseStudyRepo);
+    jiraImportService = new JiraImportService(
+      jiraTicketRepo,
+      lifecycleEventRepo,
+      caseStudyRepo,
+      normalizedEventRepo
+    );
 
     // Create a test case study
     const caseStudy = caseStudyRepo.create({

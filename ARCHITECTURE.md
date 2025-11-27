@@ -557,6 +557,14 @@ interface MetricsSummary {
   totalPRs: number;
   velocityPoints: number;
 }
+
+### Normalized Events & Effort Analytics (2025-11)
+
+- All Jira/GitHub lifecycle events are mirrored into a canonical `normalized_events` table (`id`, `case_study_id`, `ticket_key`, `event_type`, `event_source`, `occurred_at`, `discipline`, `complexity_size`, `details`).
+- Migration `002_add_normalized_events.sql` creates the table and backfills existing lifecycle events.
+- Import services write both lifecycle and normalized rows to keep compatibility while enabling discipline/complexity-aware analytics.
+- A pure `effort-calculator` module computes per-discipline medians for lead/cycle time, active vs queue hours, efficiency %, oversize rate, and reopen counts using normalized events plus ticket metadata.
+- Metrics summary API now includes `disciplineEffort` alongside flow and complexity breakdowns, powering the dashboard’s discipline-effort table.
 ```
 
 ---

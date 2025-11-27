@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
 import { JiraImportService } from '@/lib/services/jira-import.service';
 import { MetricsService } from '@/lib/services/metrics.service';
 import { EventType } from '@/lib/types';
@@ -14,6 +15,7 @@ describe('MetricsService', () => {
   let db: Database.Database;
   let jiraRepo: JiraTicketRepository;
   let lifecycleRepo: LifecycleEventRepository;
+  let normalizedRepo: NormalizedEventRepository;
   let caseStudyRepo: CaseStudyRepository;
   let jiraImport: JiraImportService;
   let metrics: MetricsService;
@@ -28,9 +30,10 @@ describe('MetricsService', () => {
 
     jiraRepo = new JiraTicketRepository(db);
     lifecycleRepo = new LifecycleEventRepository(db);
+    normalizedRepo = new NormalizedEventRepository(db);
     caseStudyRepo = new CaseStudyRepository(db);
-    jiraImport = new JiraImportService(jiraRepo, lifecycleRepo, caseStudyRepo);
-    metrics = new MetricsService(jiraRepo, lifecycleRepo);
+    jiraImport = new JiraImportService(jiraRepo, lifecycleRepo, caseStudyRepo, normalizedRepo);
+    metrics = new MetricsService(jiraRepo, lifecycleRepo, normalizedRepo);
 
     const cs = caseStudyRepo.create({
       name: 'Metrics CS',

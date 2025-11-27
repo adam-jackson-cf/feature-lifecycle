@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
 import { CorrelationService } from '@/lib/services/correlation.service';
 import { GitHubImportService } from '@/lib/services/github-import.service';
 
@@ -30,7 +31,12 @@ export async function POST(request: NextRequest) {
 
     // Initialize services
     const lifecycleEventRepo = new LifecycleEventRepository();
-    const githubImportService = new GitHubImportService(lifecycleEventRepo, caseStudyRepo);
+    const githubImportService = new GitHubImportService(
+      lifecycleEventRepo,
+      caseStudyRepo,
+      undefined, // use default PR repo
+      new NormalizedEventRepository()
+    );
 
     // Import commits
     const eventsImported = await githubImportService.importCommits(

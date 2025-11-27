@@ -2,7 +2,8 @@ import { Octokit } from 'octokit';
 import type { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import type { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
-import type { LifecycleEvent } from '@/lib/types';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
+import type { LifecycleEvent, NormalizedEvent } from '@/lib/types';
 import { EventType as EventTypeEnum, type GitHubPullRequest } from '@/lib/types';
 import { extractTicketIds } from '@/lib/utils';
 
@@ -40,6 +41,7 @@ export class GitHubImportService {
     private lifecycleEventRepo: LifecycleEventRepository,
     private caseStudyRepo: CaseStudyRepository,
     private prRepo = new GithubPullRequestRepository(),
+    private normalizedEventRepo: NormalizedEventRepository = new NormalizedEventRepository(),
     githubToken?: string
   ) {
     this.octokit = new Octokit({ auth: githubToken });
@@ -127,6 +129,7 @@ export class GitHubImportService {
       // Batch insert events
       if (events.length > 0) {
         this.lifecycleEventRepo.createMany(events);
+        this.normalizedEventRepo.createMany(events.map((event) => this.toNormalizedEvent(event)));
 
         // Update case study event count
         const caseStudy = this.caseStudyRepo.findById(caseStudyId);
@@ -309,5 +312,22 @@ export class GitHubImportService {
     });
 
     return response.data as unknown as GitHubCommitData;
+  }
+
+  private toNormalizedEvent(
+    event: Omit<LifecycleEvent, 'id' | 'createdAt'>
+  ): Omit<NormalizedEvent, 'id' | 'createdAt'> {
+    return {
+      caseStudyId: event.caseStudyId,
+      ticketKey: event.ticketKey,
+      eventType: event.eventType,
+      eventSource: event.eventSource,
+      occurredAt: event.eventDate,
+      actorName: event.actorName,
+      actorId: event.actorId,
+      discipline: event.discipline,
+      complexitySize: event.complexitySize,
+      details: event.details as Record<string, unknown>,
+    };
   }
 }

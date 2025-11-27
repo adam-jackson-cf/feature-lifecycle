@@ -66,23 +66,35 @@ export function initializeDatabase(): void {
 function runMigrations(database: Database.Database): void {
   const migrationsDir = join(__dirname, 'migrations');
 
+  // Migration 001: complexity/discipline fields
   try {
-    const files = readFileSync(
+    const file001 = readFileSync(
       join(migrationsDir, '001_add_complexity_discipline_ai.sql'),
       'utf-8'
     );
-    // Check if migration has already been applied by checking if columns exist
     const tableInfo = database.prepare('PRAGMA table_info(jira_tickets)').all() as Array<{
       name: string;
     }>;
     const hasComplexityScore = tableInfo.some((col) => col.name === 'complexity_score');
-
     if (!hasComplexityScore) {
-      database.exec(files);
+      database.exec(file001);
     }
   } catch (error) {
-    // Migration file doesn't exist or already applied - that's okay
-    console.warn('Migration warning:', error);
+    console.warn('Migration warning (001):', error);
+  }
+
+  // Migration 002: normalized events table
+  try {
+    const tableInfo = database.prepare('PRAGMA table_info(normalized_events)').all() as Array<{
+      name: string;
+    }>;
+    const hasNormalized = tableInfo.length > 0;
+    if (!hasNormalized) {
+      const file002 = readFileSync(join(migrationsDir, '002_add_normalized_events.sql'), 'utf-8');
+      database.exec(file002);
+    }
+  } catch (error) {
+    console.warn('Migration warning (002):', error);
   }
 }
 

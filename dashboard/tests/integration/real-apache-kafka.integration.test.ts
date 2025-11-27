@@ -15,6 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
+import { NormalizedEventRepository } from '@/lib/repositories/normalized-event.repository';
 import { GitHubImportService } from '@/lib/services/github-import.service';
 import { JiraImportService } from '@/lib/services/jira-import.service';
 
@@ -32,6 +33,7 @@ describe('Apache Kafka Integration Test (Real Data) [slow]', () => {
   let githubImportService: GitHubImportService;
   let jiraTicketRepo: JiraTicketRepository;
   let lifecycleEventRepo: LifecycleEventRepository;
+  let normalizedEventRepo: NormalizedEventRepository;
   let caseStudyRepo: CaseStudyRepository;
   let caseStudyId: string;
 
@@ -48,11 +50,22 @@ describe('Apache Kafka Integration Test (Real Data) [slow]', () => {
     // Create repositories
     jiraTicketRepo = new JiraTicketRepository(db);
     lifecycleEventRepo = new LifecycleEventRepository(db);
+    normalizedEventRepo = new NormalizedEventRepository(db);
     caseStudyRepo = new CaseStudyRepository(db);
 
     // Create services
-    jiraImportService = new JiraImportService(jiraTicketRepo, lifecycleEventRepo, caseStudyRepo);
-    githubImportService = new GitHubImportService(lifecycleEventRepo, caseStudyRepo);
+    jiraImportService = new JiraImportService(
+      jiraTicketRepo,
+      lifecycleEventRepo,
+      caseStudyRepo,
+      normalizedEventRepo
+    );
+    githubImportService = new GitHubImportService(
+      lifecycleEventRepo,
+      caseStudyRepo,
+      undefined,
+      normalizedEventRepo
+    );
 
     // Create case study
     const caseStudy = caseStudyRepo.create({

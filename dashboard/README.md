@@ -2,6 +2,11 @@
 
 A comprehensive dashboard application that tracks the complete development lifecycle of features from Jira ticket creation through GitHub PR merge and release deployment.
 
+## What’s New (Discipline/Effort)
+
+- Normalized lifecycle events now power per-discipline analytics: lead/cycle medians, active vs queue hours, efficiency %, oversize rate, and reopen counts.
+- Metrics summary API includes `disciplineEffort`; the dashboard’s Effort/Complexity view shows a discipline-effort table.
+
 ## Quick Start
 
 ```bash
