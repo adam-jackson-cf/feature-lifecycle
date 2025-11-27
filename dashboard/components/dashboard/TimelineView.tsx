@@ -96,10 +96,14 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
     if (!timelineInstance.current) {
       timelineInstance.current = new Timeline(timelineContainerRef.current, items, groups, {
         stack: true,
+        stackSubgroups: true,
         orientation: 'top',
         showCurrentTime: true,
         zoomKey: 'ctrlKey',
-        margin: { item: 12, axis: 18 },
+        margin: { item: { horizontal: 12, vertical: 8 }, axis: 18 },
+        verticalScroll: true,
+        maxHeight: '600px',
+        groupHeightMode: 'auto',
       });
     } else {
       timelineInstance.current.setItems(items);
@@ -161,28 +165,33 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
             No timeline events found for this case study.
           </div>
         ) : filteredTimeline && filteredTimeline.length > 0 ? (
-          <div className="space-y-3">
-            <section
-              ref={timelineContainerRef}
-              className="h-[360px] w-full rounded-lg border bg-card"
-              aria-label="Interactive timeline"
-            ></section>
-            <div className="hidden text-sm text-muted-foreground md:block">
-              Tip: hold Ctrl/Cmd while scrolling to zoom. Drag to pan.
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <section
+                ref={timelineContainerRef}
+                className="min-h-[500px] w-full rounded-lg border bg-card"
+                aria-label="Interactive timeline"
+              ></section>
+              <p className="text-xs text-muted-foreground text-center">
+                Tip: hold Ctrl/Cmd while scrolling to zoom. Drag to pan.
+              </p>
             </div>
             <div className="space-y-2">
               {filteredTimeline.map((event) => {
                 const eventDate =
                   event.eventDate instanceof Date ? event.eventDate : new Date(event.eventDate);
                 return (
-                  <div key={event.id} className="flex items-center gap-4 rounded-lg border p-2">
-                    <span className="text-sm text-muted-foreground">
+                  <div
+                    key={event.id}
+                    className="grid grid-cols-[auto_auto_1fr_1fr] items-center gap-3 rounded-lg border p-3"
+                  >
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {eventDate.toLocaleDateString()}
                     </span>
                     <Badge variant={event.eventSource === 'jira' ? 'default' : 'secondary'}>
                       {event.eventSource.toUpperCase()}
                     </Badge>
-                    <span className="font-medium">{event.ticketKey}</span>
+                    <span className="font-medium whitespace-nowrap">{event.ticketKey}</span>
                     <span className="text-sm text-muted-foreground">
                       {event.eventType.replace(/_/g, ' ')}
                     </span>
