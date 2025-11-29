@@ -145,7 +145,7 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
           </div>
         </div>
         {complexityData.oversize > 0 && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-4 text-center">
+          <p className="text-sm text-destructive mt-4 text-center">
             {complexityData.oversize} oversize ticket(s) detected
           </p>
         )}
