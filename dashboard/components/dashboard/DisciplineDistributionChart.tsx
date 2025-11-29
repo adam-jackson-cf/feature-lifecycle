@@ -3,8 +3,8 @@
 import { Users } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMetrics } from '@/lib/hooks/useMetrics';
 import { CHART_COLORS } from '@/lib/constants/chart-colors';
+import { useMetrics } from '@/lib/hooks/useMetrics';
 
 interface DisciplineDistributionChartProps {
   caseStudyId: string;

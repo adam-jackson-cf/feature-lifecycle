@@ -249,7 +249,7 @@ function PipelineNode({
           <IconComponent size={18} style={{ color: config.colorVar }} />
           <span className="text-lg font-bold mt-0.5">{count}</span>
         </div>
-        <span className="text-xs font-medium mt-2 text-center max-w-[100px] truncate">
+        <span className="text-xs font-medium mt-2 text-center whitespace-nowrap">
           {config.label}
         </span>
         {stuckCount > 0 && (

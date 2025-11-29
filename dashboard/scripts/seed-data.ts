@@ -1008,6 +1008,228 @@ function generateTickets(): SeedTicket[] {
     aiFlag: false,
   });
 
+  // ===== DATA QUALITY ISSUES - Intentional for testing =====
+
+  // Missing story points - Critical severity (5 tickets)
+  addTicket({
+    summary: 'Investigate checkout timeout reports',
+    description: 'Users reporting timeouts during peak hours. Need investigation.',
+    issueType: 'Bug',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'backend',
+    labels: ['bug', 'checkout'],
+    complexity: 'M',
+    storyPoints: 0, // Missing!
+    assignee: TEAM.backend[0],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Optimize database queries for cart service',
+    description: 'Cart service queries are slow under load. Need optimization.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'backend',
+    labels: ['performance', 'database'],
+    complexity: 'L',
+    storyPoints: 0, // Missing!
+    assignee: TEAM.backend[1],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 2,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Fix mobile layout issues on small screens',
+    description: 'Checkout form has layout issues on iPhone SE and small Android devices.',
+    issueType: 'Bug',
+    status: 'In Progress',
+    statusCategory: 'In Progress',
+    discipline: 'frontend',
+    labels: ['bug', 'mobile', 'responsive'],
+    complexity: 'S',
+    storyPoints: 0, // Missing!
+    assignee: TEAM.frontend[2],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 3,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Update payment method icons',
+    description: 'Add icons for new payment methods: Klarna, Afterpay, Affirm.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'frontend',
+    labels: ['ui', 'icons'],
+    complexity: 'XS',
+    storyPoints: 0, // Missing!
+    assignee: TEAM.frontend[0],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Research fraud detection solutions',
+    description:
+      'Evaluate fraud detection services: Sift, Riskified, Signifyd. Provide recommendation.',
+    issueType: 'Research',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'backend',
+    labels: ['research', 'security', 'fraud'],
+    complexity: 'M',
+    storyPoints: 0, // Missing!
+    assignee: TEAM.backend[2],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 2,
+    daysToComplete: null,
+    aiFlag: true,
+  });
+
+  // Missing sprint IDs - Warning severity (4 tickets)
+  addTicket({
+    summary: 'Update payment gateway documentation',
+    description: 'Documentation needs updating after Stripe integration.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'unknown',
+    labels: ['documentation'],
+    complexity: 'S',
+    storyPoints: 2,
+    assignee: TEAM.pm[0],
+    sprintId: '', // Missing!
+    sprintName: '',
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Clean up deprecated API endpoints',
+    description: 'Remove old payment endpoints that are no longer in use.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'backend',
+    labels: ['cleanup', 'api'],
+    complexity: 'S',
+    storyPoints: 3,
+    assignee: TEAM.backend[1],
+    sprintId: '', // Missing!
+    sprintName: '',
+    daysAgoCreated: 2,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Refactor checkout form validation',
+    description: 'Consolidate validation logic across checkout forms.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'frontend',
+    labels: ['refactor', 'validation'],
+    complexity: 'M',
+    storyPoints: 5,
+    assignee: TEAM.frontend[1],
+    sprintId: '', // Missing!
+    sprintName: '',
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Update team onboarding documentation',
+    description: 'Add new checkout feature to developer onboarding guide.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'unknown',
+    labels: ['documentation', 'onboarding'],
+    complexity: 'S',
+    storyPoints: 2,
+    assignee: TEAM.pm[1],
+    sprintId: '', // Missing!
+    sprintName: '',
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  // Missing labels - Info severity (3 tickets)
+  addTicket({
+    summary: 'Review PR feedback from security audit',
+    description: 'Address comments from security review.',
+    issueType: 'Task',
+    status: 'In Progress',
+    statusCategory: 'In Progress',
+    discipline: 'backend',
+    labels: [], // Missing!
+    complexity: 'S',
+    storyPoints: 2,
+    assignee: TEAM.backend[1],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 2,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Fix TypeScript strict mode errors',
+    description: 'Enable strict mode and fix all type errors in checkout module.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'frontend',
+    labels: [], // Missing!
+    complexity: 'M',
+    storyPoints: 5,
+    assignee: TEAM.frontend[0],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
+  addTicket({
+    summary: 'Update dependency versions',
+    description: 'Update outdated npm packages and test for breaking changes.',
+    issueType: 'Task',
+    status: 'To Do',
+    statusCategory: 'To Do',
+    discipline: 'devops',
+    labels: [], // Missing!
+    complexity: 'S',
+    storyPoints: 3,
+    assignee: TEAM.devops[1],
+    sprintId: SPRINTS[3].id,
+    sprintName: SPRINTS[3].name,
+    daysAgoCreated: 1,
+    daysToComplete: null,
+    aiFlag: false,
+  });
+
   return tickets;
 }
 
