@@ -9,6 +9,7 @@ import {
   Diamond,
   Filter,
   GitMerge,
+  HelpCircle,
   SortDesc,
   Square,
   Star,
@@ -186,7 +187,7 @@ function getStateConfig(eventType: string) {
   };
 }
 
-function StateIcon({ eventType, size = 16 }: { eventType: string; size?: number }) {
+function _StateIcon({ eventType, size = 16 }: { eventType: string; size?: number }) {
   const config = getStateConfig(eventType);
   const IconComponent = config.icon;
   return <IconComponent size={size} style={{ color: config.colorVar }} />;
@@ -221,21 +222,41 @@ function PipelineNode({
   const config = getStateConfig(state);
   const IconComponent = config.icon;
 
+  // State descriptions for tooltips
+  const stateDescriptions: Record<string, string> = {
+    'ticket created': 'New tickets that have been created but not yet started',
+    'status changed': 'Tickets actively being worked on',
+    'assignee changed': 'Tickets that have been assigned to developers',
+    'commit created': 'Tickets with code commits made',
+    'pr opened': 'Tickets with pull requests awaiting review',
+    'pr reviewed': 'Pull requests that have received review feedback',
+    'pr approved': 'Pull requests approved and ready to merge',
+    'pr merged': 'Pull requests successfully merged to main branch',
+    resolved: 'Tickets marked as resolved or completed',
+    deployed: 'Changes deployed to production or staging',
+  };
+
+  const description = stateDescriptions[state.toLowerCase()] || `Tickets in ${config.label} state`;
+
   return (
     <div className="flex items-center">
       <div className="flex flex-col items-center">
         <div
           className="w-16 h-16 rounded-xl border-2 flex flex-col items-center justify-center bg-card shadow-sm transition-transform hover:scale-105"
           style={{ borderColor: config.colorVar }}
+          title={description}
         >
           <IconComponent size={18} style={{ color: config.colorVar }} />
           <span className="text-lg font-bold mt-0.5">{count}</span>
         </div>
-        <span className="text-xs font-medium mt-2 text-center max-w-[70px] truncate">
+        <span className="text-xs font-medium mt-2 text-center max-w-[100px] truncate">
           {config.label}
         </span>
         {stuckCount > 0 && (
-          <span className="text-xs text-warning flex items-center gap-0.5 mt-0.5">
+          <span
+            className="text-xs text-warning flex items-center gap-0.5 mt-0.5"
+            title="Ticket has been in this state for more than 2 days"
+          >
             <AlertTriangle size={10} />
             {stuckCount}
           </span>
@@ -274,14 +295,13 @@ function TicketTimeline({ events }: { events: LifecycleEvent[] }) {
               style={{ borderColor: config.colorVar }}
             />
             <div className="flex items-center gap-3">
-              <StateIcon eventType={event.eventType} size={14} />
               <span className="text-sm font-medium">{config.label}</span>
               <span className="text-xs text-muted-foreground ml-auto">
                 {formatRelativeDate(eventDate)}
               </span>
             </div>
             {duration && (
-              <div className="mt-1 ml-5">
+              <div className="mt-1">
                 <Badge variant="outline" className="text-xs font-normal">
                   +{duration}d
                 </Badge>
@@ -299,6 +319,7 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
   const [expandedTickets, setExpandedTickets] = useState<Set<string>>(new Set());
   const [filterState, setFilterState] = useState<FilterOption>('all');
   const [sortOption, setSortOption] = useState<SortOption>('days-desc');
+  const [showHelp, setShowHelp] = useState(false);
 
   // Process timeline data into ticket summaries
   const ticketSummaries = useMemo((): TicketSummary[] => {
@@ -477,6 +498,14 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowHelp(!showHelp)}
+              className="h-8 px-2"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </Button>
             <Select value={filterState} onValueChange={(v) => setFilterState(v as FilterOption)}>
               <SelectTrigger className="w-[140px] h-8 text-xs">
                 <Filter className="h-3 w-3 mr-1" />
@@ -505,6 +534,24 @@ export function TimelineView({ caseStudyId }: TimelineViewProps) {
           </div>
         </div>
       </CardHeader>
+
+      {showHelp && (
+        <div className="px-6 pb-4">
+          <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+            <p className="text-sm font-medium">Understanding Ticket Flow</p>
+            <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+              <li>This chart shows ticket progression through development states</li>
+              <li>Each pipeline node shows tickets currently in that state</li>
+              <li>
+                Yellow warning icon <AlertTriangle className="inline h-3 w-3 text-warning" />{' '}
+                indicates tickets stuck for more than 2 days
+              </li>
+              <li>Click on any ticket to expand its full timeline and event history</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       <CardContent className="space-y-6">
         {/* Bottleneck Alert */}
         {totalStuck > 0 && (

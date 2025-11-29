@@ -95,8 +95,8 @@ export function AggregatePhaseView() {
                   outerRadius={80}
                   dataKey="value"
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {chartData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip

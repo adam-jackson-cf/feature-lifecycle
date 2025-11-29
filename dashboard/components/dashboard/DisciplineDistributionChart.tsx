@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMetrics } from '@/lib/hooks/useMetrics';
+import { CHART_COLORS } from '@/lib/constants/chart-colors';
 
 interface DisciplineDistributionChartProps {
   caseStudyId: string;
@@ -14,14 +15,6 @@ interface DisciplineDatum {
   value: number;
   [key: string]: unknown;
 }
-
-const CHART_COLORS = [
-  '#6c63ff', // accent
-  '#6bcba2', // primary
-  '#5fc4e8', // chart-3
-  '#f2c062', // chart-4
-  '#8ad0c2', // chart-5
-];
 
 function CustomTooltip({
   active,
@@ -136,7 +129,7 @@ export function DisciplineDistributionChart({ caseStudyId }: DisciplineDistribut
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-3 min-w-[120px]">
+          <div className="space-y-3 min-w-[140px]">
             {chartData.map((entry, index) => {
               const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0;
               return (

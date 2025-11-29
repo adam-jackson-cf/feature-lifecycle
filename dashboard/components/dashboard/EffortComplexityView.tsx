@@ -4,6 +4,7 @@ import { Layers } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMetrics } from '@/lib/hooks/useMetrics';
+import { CHART_COLORS } from '@/lib/constants/chart-colors';
 
 interface EffortComplexityViewProps {
   caseStudyId: string;
@@ -14,14 +15,6 @@ interface SizeDatum {
   value: number;
   [key: string]: unknown;
 }
-
-const CHART_COLORS = [
-  '#6bcba2', // XS - primary
-  '#5fc4e8', // S - chart-3
-  '#f2c062', // M - chart-4
-  '#6c63ff', // L - accent
-  '#ef4444', // XL - destructive
-];
 
 function CustomTooltip({
   active,
@@ -123,7 +116,7 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-3 min-w-[100px]">
+          <div className="space-y-3 min-w-[140px]">
             {chartData.map((entry) => {
               const colorIndex = sizeOrder.indexOf(entry.name);
               const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0;

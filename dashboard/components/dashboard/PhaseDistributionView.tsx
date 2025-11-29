@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CHART_COLORS } from '@/lib/constants/chart-colors';
 import type { PhaseDistribution } from '@/lib/types';
 import { PhaseDistributionTable } from './PhaseDistributionTable';
 
@@ -54,12 +55,12 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
     );
   }
 
-  const chartData = data.phases.map((p) => ({
+  const chartData = data.phases.map((p, index) => ({
     name: p.label,
     value: p.percentage,
     hours: p.totalHours,
     tickets: p.ticketCount,
-    color: p.color,
+    color: CHART_COLORS[index % CHART_COLORS.length],
   }));
 
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
@@ -115,8 +116,8 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
                       dataKey="value"
                       strokeWidth={0}
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {chartData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip
@@ -133,11 +134,11 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
                 </ResponsiveContainer>
               </div>
               <div className="space-y-3 min-w-[140px]">
-                {chartData.map((entry, index) => {
+                {chartData.map((entry) => {
                   const percentage =
                     totalValue > 0 ? ((entry.value / totalValue) * 100).toFixed(0) : 0;
                   return (
-                    <div key={`legend-${index}`} className="flex items-center gap-3">
+                    <div key={entry.name} className="flex items-center gap-3">
                       <div
                         className="h-3 w-3 rounded-full"
                         style={{ backgroundColor: entry.color }}

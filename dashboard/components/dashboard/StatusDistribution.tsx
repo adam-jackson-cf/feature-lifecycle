@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CHART_COLORS } from '@/lib/constants/chart-colors';
 
 interface StatusDistributionProps {
   caseStudyId: string;
@@ -15,14 +16,6 @@ interface StatusDatum {
   value: number;
   [key: string]: unknown;
 }
-
-const CHART_COLORS = [
-  '#6bcba2', // primary
-  '#6c63ff', // accent
-  '#5fc4e8', // chart-3
-  '#f2c062', // chart-4
-  '#8ad0c2', // chart-5
-];
 
 function CustomTooltip({
   active,
