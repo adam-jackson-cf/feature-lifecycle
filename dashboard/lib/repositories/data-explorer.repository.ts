@@ -55,7 +55,7 @@ export class DataExplorerRepository {
       SELECT * FROM jira_tickets
       ${whereClause}
       ORDER BY updated_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT @limit OFFSET @offset
     `);
     const rows = dataStmt.all({ ...params, limit, offset }) as JiraTicketRow[];
 
@@ -83,7 +83,7 @@ export class DataExplorerRepository {
       SELECT * FROM lifecycle_events
       ${whereClause}
       ORDER BY event_date DESC
-      LIMIT ? OFFSET ?
+      LIMIT @limit OFFSET @offset
     `);
     const rows = dataStmt.all({ ...params, limit, offset }) as LifecycleEventRow[];
 
@@ -111,7 +111,7 @@ export class DataExplorerRepository {
       SELECT * FROM normalized_events
       ${whereClause}
       ORDER BY occurred_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT @limit OFFSET @offset
     `);
     const rows = dataStmt.all({ ...params, limit, offset }) as NormalizedEventRow[];
 

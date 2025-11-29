@@ -90,10 +90,11 @@ export function AggregatePhaseView() {
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value.toFixed(0)}%`}
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
                   dataKey="value"
+                  strokeWidth={0}
                 >
                   {chartData.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
