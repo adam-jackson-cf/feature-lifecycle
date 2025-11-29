@@ -5,7 +5,7 @@ import {
   calculatePhaseDistribution,
   getPhaseBreakdownSummary,
 } from '@/lib/services/phase-calculator';
-import type { JiraTicket, NormalizedEvent } from '@/lib/types';
+import type { JiraTicket } from '@/lib/types';
 
 const testConfig: PhaseRulesConfig = {
   disciplineMapping: {

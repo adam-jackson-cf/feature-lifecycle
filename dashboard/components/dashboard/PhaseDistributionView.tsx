@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Table2 } from 'lucide-react';
 import { useState } from 'react';
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PhaseDistribution } from '@/lib/types';
@@ -30,7 +30,7 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Effort by Lifecycle Phase</CardTitle>
+          <CardTitle>Effort by Phase</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[300px] items-center justify-center">
@@ -45,7 +45,7 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Effort by Lifecycle Phase</CardTitle>
+          <CardTitle>Effort by Phase</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-destructive">
           Unable to load phase distribution.
@@ -62,11 +62,18 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
     color: p.color,
   }));
 
+  const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle>Effort by Lifecycle Phase</CardTitle>
+          <div>
+            <CardTitle className="text-base">Effort by Phase</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Breakdown of effort across lifecycle phases
+            </p>
+          </div>
           <div className="flex gap-1">
             <Button
               variant={viewMode === 'chart' ? 'default' : 'ghost'}
@@ -89,23 +96,24 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
       </CardHeader>
       <CardContent>
         {viewMode === 'chart' ? (
-          <>
-            {data.phases.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No phase data available
-              </p>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={300}>
+          data.phases.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No phase data available
+            </p>
+          ) : (
+            <div className="flex items-center gap-6">
+              <div className="flex-1">
+                <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value.toFixed(0)}%`}
+                      innerRadius={50}
                       outerRadius={80}
+                      paddingAngle={2}
                       dataKey="value"
+                      strokeWidth={0}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -121,23 +129,31 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
                         'Effort',
                       ]}
                     />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
-
-                <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Total Hours</p>
-                    <p className="text-xl font-semibold">{data.totalHours.toFixed(1)}h</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total Tickets</p>
-                    <p className="text-xl font-semibold">{data.totalTickets}</p>
-                  </div>
-                </div>
-              </>
-            )}
-          </>
+              </div>
+              <div className="space-y-3 min-w-[140px]">
+                {chartData.map((entry, index) => {
+                  const percentage =
+                    totalValue > 0 ? ((entry.value / totalValue) * 100).toFixed(0) : 0;
+                  return (
+                    <div key={`legend-${index}`} className="flex items-center gap-3">
+                      <div
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: entry.color }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium leading-none">{entry.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {entry.hours.toFixed(1)}h ({percentage}%)
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )
         ) : (
           <PhaseDistributionTable data={data} />
         )}

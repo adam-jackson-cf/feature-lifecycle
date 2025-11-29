@@ -4,15 +4,14 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useCaseStudy } from '@/lib/hooks/useCaseStudy';
 import { useMetrics } from '@/lib/hooks/useMetrics';
-import { CycleTimeChart } from './CycleTimeChart';
 import { DataQualityView } from './DataQualityView';
+import { DisciplineDistributionChart } from './DisciplineDistributionChart';
 import { EffortComplexityView } from './EffortComplexityView';
-import { LeadTimeChart } from './LeadTimeChart';
 import { MetricsCards } from './MetricsCards';
 import { PhaseDistributionView } from './PhaseDistributionView';
 import { StatusDistribution } from './StatusDistribution';
 import { TimelineView } from './TimelineView';
-import { VelocityChart } from './VelocityChart';
+import { TimeMetricsChart } from './TimeMetricsChart';
 
 interface DashboardViewProps {
   caseStudyId: string;
@@ -75,18 +74,16 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
       {metrics && <MetricsCards metrics={metrics} />}
 
       <div className="grid gap-4 md:grid-cols-2">
-        <CycleTimeChart caseStudyId={caseStudyId} />
-        <LeadTimeChart caseStudyId={caseStudyId} />
+        <PhaseDistributionView caseStudyId={caseStudyId} />
+        <StatusDistribution caseStudyId={caseStudyId} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <StatusDistribution caseStudyId={caseStudyId} />
-        <VelocityChart caseStudyId={caseStudyId} />
+        <EffortComplexityView caseStudyId={caseStudyId} />
+        <DisciplineDistributionChart caseStudyId={caseStudyId} />
       </div>
 
-      <EffortComplexityView caseStudyId={caseStudyId} />
-
-      <PhaseDistributionView caseStudyId={caseStudyId} />
+      <TimeMetricsChart caseStudyId={caseStudyId} />
 
       <DataQualityView caseStudyId={caseStudyId} />
 

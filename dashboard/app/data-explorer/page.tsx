@@ -1,7 +1,6 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 import { DataExplorerView } from '@/components/data-explorer/DataExplorerView';
 import { Header } from '@/components/layout/Header';
 

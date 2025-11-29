@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { PhaseDistribution, PhaseEffortMetric } from '@/lib/types';
+import type { PhaseDistribution } from '@/lib/types';
 
 interface PhaseDistributionChartProps {
   caseStudyId: string;
