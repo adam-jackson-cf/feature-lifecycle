@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCaseStudy } from '@/lib/hooks/useCaseStudy';
 import { useMetrics } from '@/lib/hooks/useMetrics';
-import { DataQualityView } from './DataQualityView';
+import { DataQualityTab } from './DataQualityTab';
 import { DisciplineDistributionChart } from './DisciplineDistributionChart';
 import { EffortComplexityView } from './EffortComplexityView';
 import { MetricsCards } from './MetricsCards';
@@ -65,29 +66,40 @@ export function DashboardView({ caseStudyId }: DashboardViewProps) {
         </div>
       </div>
 
-      {metricsLoading && <div className="text-muted-foreground">Loading metrics...</div>}
-      {metricsError && (
-        <div className="rounded-lg border border-dashed bg-card/60 p-4 text-sm text-destructive">
-          Failed to load metrics. Please retry or check your connection.
-        </div>
-      )}
-      {metrics && <MetricsCards metrics={metrics} />}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="data-quality">Data Quality</TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <PhaseDistributionView caseStudyId={caseStudyId} />
-        <StatusDistribution caseStudyId={caseStudyId} />
-      </div>
+        <TabsContent value="overview" className="space-y-6">
+          {metricsLoading && <div className="text-muted-foreground">Loading metrics...</div>}
+          {metricsError && (
+            <div className="rounded-lg border border-dashed bg-card/60 p-4 text-sm text-destructive">
+              Failed to load metrics. Please retry or check your connection.
+            </div>
+          )}
+          {metrics && <MetricsCards metrics={metrics} />}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <EffortComplexityView caseStudyId={caseStudyId} />
-        <DisciplineDistributionChart caseStudyId={caseStudyId} />
-      </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <PhaseDistributionView caseStudyId={caseStudyId} />
+            <StatusDistribution caseStudyId={caseStudyId} />
+          </div>
 
-      <TimeMetricsChart caseStudyId={caseStudyId} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <EffortComplexityView caseStudyId={caseStudyId} />
+            <DisciplineDistributionChart caseStudyId={caseStudyId} />
+          </div>
 
-      <DataQualityView caseStudyId={caseStudyId} />
+          <TimeMetricsChart caseStudyId={caseStudyId} />
 
-      <TimelineView caseStudyId={caseStudyId} />
+          <TimelineView caseStudyId={caseStudyId} />
+        </TabsContent>
+
+        <TabsContent value="data-quality">
+          <DataQualityTab caseStudyId={caseStudyId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

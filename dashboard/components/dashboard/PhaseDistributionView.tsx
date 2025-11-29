@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Table2 } from 'lucide-react';
+import { BarChart3, Clock, Table2 } from 'lucide-react';
 import { useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -70,7 +70,10 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base">Effort by Phase</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-4 w-4 text-primary" />
+              Effort by Phase
+            </CardTitle>
             <p className="text-xs text-muted-foreground">
               Breakdown of effort across lifecycle phases
             </p>
@@ -103,15 +106,15 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
             </p>
           ) : (
             <div className="flex items-center gap-6">
-              <div className="flex-1">
-                <ResponsiveContainer width="100%" height={220}>
+              <div className="flex-1 min-w-0">
+                <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
+                      innerRadius={60}
+                      outerRadius={100}
                       paddingAngle={2}
                       dataKey="value"
                       strokeWidth={0}
@@ -133,18 +136,18 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="space-y-3 min-w-[140px]">
+              <div className="w-[160px] shrink-0 space-y-2 max-h-[240px] overflow-y-auto">
                 {chartData.map((entry) => {
                   const percentage =
                     totalValue > 0 ? ((entry.value / totalValue) * 100).toFixed(0) : 0;
                   return (
                     <div key={entry.name} className="flex items-center gap-3">
                       <div
-                        className="h-3 w-3 rounded-full"
+                        className="h-3 w-3 rounded-full shrink-0"
                         style={{ backgroundColor: entry.color }}
                       />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium leading-none">{entry.name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-none truncate">{entry.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {entry.hours.toFixed(1)}h ({percentage}%)
                         </p>

@@ -92,15 +92,15 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-6">
-          <div className="flex-1">
-            <ResponsiveContainer width="100%" height={220}>
+          <div className="flex-1 min-w-0">
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={100}
                   paddingAngle={2}
                   dataKey="value"
                   strokeWidth={0}
@@ -116,17 +116,17 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-3 min-w-[140px]">
+          <div className="w-[160px] shrink-0 space-y-2 max-h-[240px] overflow-y-auto">
             {chartData.map((entry) => {
               const colorIndex = sizeOrder.indexOf(entry.name);
               const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0;
               return (
                 <div key={entry.name} className="flex items-center gap-3">
                   <div
-                    className="h-3 w-3 rounded-full"
+                    className="h-3 w-3 rounded-full shrink-0"
                     style={{ backgroundColor: CHART_COLORS[colorIndex] || CHART_COLORS[0] }}
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-none">{entry.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {entry.value} ({percentage}%)
