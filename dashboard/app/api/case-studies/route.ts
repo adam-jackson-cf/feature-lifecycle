@@ -6,13 +6,14 @@ const caseStudyRepository = new CaseStudyRepository();
 
 const createCaseStudySchema = z.object({
   name: z.string().min(1),
-  type: z.enum(['project', 'sprint', 'ticket']),
+  type: z.enum(['project', 'sprint', 'ticket', 'feature']).optional(),
   jiraProjectKey: z.string().min(1),
   jiraProjectId: z.string().optional(),
-  jiraSprintId: z.string().optional(),
-  jiraTicketKey: z.string().optional(),
   githubOwner: z.string().min(1),
   githubRepo: z.string().min(1),
+  // Deprecated fields - kept for backwards compatibility
+  jiraSprintId: z.string().optional(),
+  jiraTicketKey: z.string().optional(),
 });
 
 export async function GET() {
@@ -31,7 +32,12 @@ export async function POST(request: NextRequest) {
     const validatedData = createCaseStudySchema.parse(body);
 
     const caseStudy = caseStudyRepository.create({
-      ...validatedData,
+      name: validatedData.name,
+      type: validatedData.type,
+      jiraProjectKey: validatedData.jiraProjectKey,
+      jiraProjectId: validatedData.jiraProjectId,
+      githubOwner: validatedData.githubOwner,
+      githubRepo: validatedData.githubRepo,
       importedAt: new Date(),
       ticketCount: 0,
       eventCount: 0,

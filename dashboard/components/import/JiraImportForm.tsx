@@ -6,8 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface JiraImportFormProps {
-  importType: 'project' | 'sprint' | 'ticket';
-  onSubmit: (data: { projectKey: string; sprintId?: string; ticketKey?: string }) => void;
+  importType: 'project' | 'sprint' | 'ticket' | 'feature';
+  onSubmit: (data: {
+    projectKey: string;
+    sprintId?: string;
+    ticketKey?: string;
+    label?: string;
+  }) => void;
   onBack: () => void;
 }
 
@@ -15,6 +20,7 @@ export function JiraImportForm({ importType, onSubmit, onBack }: JiraImportFormP
   const [projectKey, setProjectKey] = useState('');
   const [sprintId, setSprintId] = useState('');
   const [ticketKey, setTicketKey] = useState('');
+  const [label, setLabel] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +28,7 @@ export function JiraImportForm({ importType, onSubmit, onBack }: JiraImportFormP
       projectKey,
       sprintId: importType === 'sprint' ? sprintId : undefined,
       ticketKey: importType === 'ticket' ? ticketKey : undefined,
+      label: importType === 'feature' ? label : undefined,
     });
   };
 
@@ -61,6 +68,22 @@ export function JiraImportForm({ importType, onSubmit, onBack }: JiraImportFormP
             placeholder="e.g., KAFKA-19734"
             required
           />
+        </div>
+      )}
+
+      {importType === 'feature' && (
+        <div>
+          <Label htmlFor="label">Jira Label</Label>
+          <Input
+            id="label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="e.g., feature-checkout"
+            required
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Import all tickets with this label from the project
+          </p>
         </div>
       )}
 

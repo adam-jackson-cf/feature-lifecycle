@@ -73,6 +73,36 @@ export class JiraImportService {
   }
 
   /**
+   * Fetch Jira issues by label using Jira REST API (requires env vars)
+   */
+  async fetchIssuesByLabel(
+    projectKey: string,
+    label: string,
+    maxResults = 200
+  ): Promise<JiraIssue[]> {
+    const host = process.env.JIRA_HOST || 'https://issues.apache.org/jira';
+    const email = process.env.JIRA_EMAIL;
+    const token = process.env.JIRA_API_TOKEN;
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (email && token) {
+      const auth = Buffer.from(`${email}:${token}`).toString('base64');
+      headers.Authorization = `Basic ${auth}`;
+    }
+
+    // Escape label for JQL query
+    const escapedLabel = label.replace(/"/g, '\\"');
+    const jql = `project=${projectKey} AND labels="${escapedLabel}"`;
+    const url = `${host}/rest/api/2/search?jql=${encodeURIComponent(jql)}&maxResults=${maxResults}`;
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) {
+      throw new Error(`Jira fetch failed: ${resp.status} ${resp.statusText}`);
+    }
+    const json = (await resp.json()) as { issues: JiraIssue[] };
+    return json.issues || [];
+  }
+
+  /**
    * Fetch changelog for a Jira issue to get status change history
    */
   async fetchIssueChangelog(issueKey: string): Promise<JiraChangelogHistory[]> {

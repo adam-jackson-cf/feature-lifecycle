@@ -122,6 +122,20 @@ function runMigrations(database: Database.Database): void {
   } catch (error) {
     console.warn('Migration warning (003):', error);
   }
+
+  // Migration 004: case study imports table for multiple imports per case study
+  try {
+    const tableInfo = database.prepare('PRAGMA table_info(case_study_imports)').all() as Array<{
+      name: string;
+    }>;
+    const hasImportsTable = tableInfo.length > 0;
+    if (!hasImportsTable) {
+      const file004 = readFileSync(join(migrationsDir, '004_case_study_imports.sql'), 'utf-8');
+      database.exec(file004);
+    }
+  } catch (error) {
+    console.warn('Migration warning (004):', error);
+  }
 }
 
 // Don't initialize on module load - let it be lazy

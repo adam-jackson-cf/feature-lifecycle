@@ -29,7 +29,7 @@ export class CaseStudyRepository implements ICaseStudyRepository {
     stmt.run(
       id,
       data.name,
-      data.type,
+      data.type || null,
       data.jiraProjectKey,
       data.jiraProjectId || null,
       data.jiraSprintId || null,
@@ -179,7 +179,7 @@ export class CaseStudyRepository implements ICaseStudyRepository {
     return {
       id: row.id,
       name: row.name,
-      type: row.type as CaseStudy['type'],
+      type: (row.type as CaseStudy['type']) || undefined,
       jiraProjectKey: row.jira_project_key,
       jiraProjectId: row.jira_project_id || undefined,
       jiraSprintId: row.jira_sprint_id || undefined,

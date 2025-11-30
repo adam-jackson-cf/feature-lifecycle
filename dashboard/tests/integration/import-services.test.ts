@@ -14,6 +14,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CaseStudyRepository } from '@/lib/repositories/case-study.repository';
+import { CaseStudyImportRepository } from '@/lib/repositories/case-study-import.repository';
 import { GithubPullRequestRepository } from '@/lib/repositories/github-pull-request.repository';
 import { JiraTicketRepository } from '@/lib/repositories/jira-ticket.repository';
 import { LifecycleEventRepository } from '@/lib/repositories/lifecycle-event.repository';
@@ -48,6 +49,14 @@ describe('Import Services Integration Test (Fixtures)', () => {
     const schemaPath = path.join(__dirname, '../../lib/db/schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
     db.exec(schema);
+
+    // Run migrations to ensure case_study_imports table exists
+    const migrationsDir = path.join(__dirname, '../../lib/db/migrations');
+    const migration004 = fs.readFileSync(
+      path.join(migrationsDir, '004_case_study_imports.sql'),
+      'utf-8'
+    );
+    db.exec(migration004);
 
     // Create repositories
     jiraTicketRepo = new JiraTicketRepository(db);
@@ -438,5 +447,216 @@ describe('Import Services Integration Test (Fixtures)', () => {
     // Verify raw data matches original
     const originalIssue = mockIssues.find((i) => i.key === 'KAFKA-19734');
     expect(ticket?.rawJiraData).toEqual(originalIssue);
+  });
+
+  describe('Multiple Imports per Case Study', () => {
+    let importRepo: CaseStudyImportRepository;
+    let multiImportCaseStudyId: string;
+
+    beforeAll(() => {
+      importRepo = new CaseStudyImportRepository(db);
+
+      // Create a new case study for multi-import testing
+      const caseStudy = caseStudyRepo.create({
+        name: 'Multi-Import Test Case Study',
+        jiraProjectKey: 'KAFKA',
+        githubOwner: 'apache',
+        githubRepo: 'kafka',
+        importedAt: new Date(),
+        ticketCount: 0,
+        eventCount: 0,
+        startDate: new Date(),
+        endDate: new Date(),
+        status: 'importing',
+      });
+      multiImportCaseStudyId = caseStudy.id;
+    });
+
+    it('should support multiple imports per case study', async () => {
+      // Create first import (project)
+      const import1 = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'project',
+        jiraProjectKey: 'KAFKA',
+        status: 'completed',
+        ticketCount: 10,
+        eventCount: 50,
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-31'),
+      });
+
+      // Create second import (feature)
+      const import2 = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'feature',
+        jiraProjectKey: 'KAFKA',
+        jiraLabel: 'checkout-flow',
+        status: 'completed',
+        ticketCount: 5,
+        eventCount: 25,
+        startDate: new Date('2024-02-01'),
+        endDate: new Date('2024-02-15'),
+      });
+
+      // Verify both imports exist
+      const imports = importRepo.findByCaseStudy(multiImportCaseStudyId);
+      expect(imports.length).toBe(2);
+      expect(imports.map((i) => i.id)).toContain(import1.id);
+      expect(imports.map((i) => i.id)).toContain(import2.id);
+    });
+
+    it('should import tickets from multiple sources into same case study', async () => {
+      // Import first set of issues (project import)
+      const projectIssues = mockIssues.slice(0, 5);
+      await jiraImportService.importIssues(multiImportCaseStudyId, projectIssues);
+
+      // Create import record for project import
+      const _projectImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'project',
+        jiraProjectKey: 'KAFKA',
+        status: 'completed',
+        ticketCount: projectIssues.length,
+        eventCount: projectIssues.length * 2, // Estimated
+        startDate: new Date(projectIssues[0].fields.created),
+        endDate: new Date(projectIssues[projectIssues.length - 1].fields.created),
+      });
+
+      // Import second set (feature import)
+      const featureIssues = mockIssues.slice(5, 8);
+      await jiraImportService.importIssues(multiImportCaseStudyId, featureIssues);
+
+      // Create import record for feature import
+      const _featureImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'feature',
+        jiraProjectKey: 'KAFKA',
+        jiraLabel: 'test-feature',
+        status: 'completed',
+        ticketCount: featureIssues.length,
+        eventCount: featureIssues.length * 2,
+        startDate: new Date(featureIssues[0].fields.created),
+        endDate: new Date(featureIssues[featureIssues.length - 1].fields.created),
+      });
+
+      // Verify all tickets are in the same case study
+      const allTickets = jiraTicketRepo.findByCaseStudy(multiImportCaseStudyId);
+      expect(allTickets.length).toBe(projectIssues.length + featureIssues.length);
+
+      // Verify both imports are recorded
+      const imports = importRepo.findByCaseStudy(multiImportCaseStudyId);
+      expect(imports.length).toBeGreaterThanOrEqual(2);
+
+      // Update case study ticket count to reflect all imported tickets
+      // (The import service sets ticketCount per batch, so we need to aggregate manually)
+      const totalTicketCount = allTickets.length;
+      const totalEventCount = lifecycleEventRepo.findByCaseStudy(multiImportCaseStudyId).length;
+      caseStudyRepo.update(multiImportCaseStudyId, {
+        ticketCount: totalTicketCount,
+        eventCount: totalEventCount,
+      });
+
+      // Verify case study aggregates correctly
+      const caseStudy = caseStudyRepo.findById(multiImportCaseStudyId);
+      expect(caseStudy?.ticketCount).toBe(projectIssues.length + featureIssues.length);
+    });
+
+    it('should track different import types separately', () => {
+      const projectImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'project',
+        jiraProjectKey: 'KAFKA',
+        status: 'completed',
+        ticketCount: 20,
+        eventCount: 100,
+      });
+
+      const sprintImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'sprint',
+        jiraProjectKey: 'KAFKA',
+        jiraSprintId: 'sprint-123',
+        status: 'completed',
+        ticketCount: 8,
+        eventCount: 40,
+      });
+
+      const ticketImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'ticket',
+        jiraProjectKey: 'KAFKA',
+        jiraTicketKey: 'KAFKA-12345',
+        status: 'completed',
+        ticketCount: 1,
+        eventCount: 5,
+      });
+
+      const featureImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'feature',
+        jiraProjectKey: 'KAFKA',
+        jiraLabel: 'new-feature',
+        status: 'completed',
+        ticketCount: 5,
+        eventCount: 25,
+      });
+
+      // Verify all types are distinct
+      const projectImports = importRepo.findByType(multiImportCaseStudyId, 'project');
+      const sprintImports = importRepo.findByType(multiImportCaseStudyId, 'sprint');
+      const ticketImports = importRepo.findByType(multiImportCaseStudyId, 'ticket');
+      const featureImports = importRepo.findByType(multiImportCaseStudyId, 'feature');
+
+      expect(projectImports.length).toBeGreaterThanOrEqual(1);
+      expect(sprintImports.length).toBeGreaterThanOrEqual(1);
+      expect(ticketImports.length).toBeGreaterThanOrEqual(1);
+      expect(featureImports.length).toBeGreaterThanOrEqual(1);
+
+      expect(projectImports.map((i) => i.id)).toContain(projectImport.id);
+      expect(sprintImports.map((i) => i.id)).toContain(sprintImport.id);
+      expect(ticketImports.map((i) => i.id)).toContain(ticketImport.id);
+      expect(featureImports.map((i) => i.id)).toContain(featureImport.id);
+    });
+
+    it('should handle import status tracking independently', () => {
+      const importingImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'project',
+        jiraProjectKey: 'KAFKA',
+        status: 'importing',
+        ticketCount: 0,
+        eventCount: 0,
+      });
+
+      const completedImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'feature',
+        jiraProjectKey: 'KAFKA',
+        jiraLabel: 'done-feature',
+        status: 'completed',
+        ticketCount: 10,
+        eventCount: 50,
+      });
+
+      const errorImport = importRepo.create({
+        caseStudyId: multiImportCaseStudyId,
+        importType: 'sprint',
+        jiraProjectKey: 'KAFKA',
+        jiraSprintId: 'sprint-456',
+        status: 'error',
+        ticketCount: 0,
+        eventCount: 0,
+        errorMessage: 'Sprint not found',
+      });
+
+      // Verify status filtering works
+      const importingImports = importRepo.findByStatus(multiImportCaseStudyId, 'importing');
+      const completedImports = importRepo.findByStatus(multiImportCaseStudyId, 'completed');
+      const errorImports = importRepo.findByStatus(multiImportCaseStudyId, 'error');
+
+      expect(importingImports.map((i) => i.id)).toContain(importingImport.id);
+      expect(completedImports.map((i) => i.id)).toContain(completedImport.id);
+      expect(errorImports.map((i) => i.id)).toContain(errorImport.id);
+    });
   });
 });

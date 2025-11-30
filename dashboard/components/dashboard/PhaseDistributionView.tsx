@@ -14,6 +14,44 @@ interface PhaseDistributionViewProps {
   caseStudyId: string;
 }
 
+interface ChartDataItem {
+  name: string;
+  value: number;
+  hours: number;
+  tickets: number;
+  color: string;
+  [key: string]: unknown;
+}
+
+function PremiumTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: ChartDataItem }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="glass-strong rounded-lg border border-border/50 px-4 py-3 shadow-glass">
+      <p className="text-sm font-semibold font-display text-foreground">{data.name}</p>
+      <div className="mt-2 space-y-1">
+        <p className="text-xs text-muted-foreground">
+          Hours:{' '}
+          <span className="font-medium text-foreground tabular-nums">{data.hours.toFixed(1)}</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Tickets: <span className="font-medium text-foreground tabular-nums">{data.tickets}</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Share:{' '}
+          <span className="font-medium text-foreground tabular-nums">{data.value.toFixed(1)}%</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProps) {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
 
@@ -29,13 +67,16 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="glass shadow-glass animate-fade-in-up">
         <CardHeader>
-          <CardTitle>Effort by Phase</CardTitle>
+          <CardTitle className="font-display">Effort by Phase</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[300px] items-center justify-center">
-            <span className="text-muted-foreground">Loading...</span>
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <span className="text-muted-foreground text-sm">Loading chart...</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -44,9 +85,9 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
 
   if (error || !data) {
     return (
-      <Card>
+      <Card className="glass shadow-glass">
         <CardHeader>
-          <CardTitle>Effort by Phase</CardTitle>
+          <CardTitle className="font-display">Effort by Phase</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-destructive">
           Unable to load phase distribution.
@@ -55,7 +96,7 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
     );
   }
 
-  const chartData = data.phases.map((p, index) => ({
+  const chartData: ChartDataItem[] = data.phases.map((p, index) => ({
     name: p.label,
     value: p.percentage,
     hours: p.totalHours,
@@ -63,37 +104,41 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
     color: CHART_COLORS[index % CHART_COLORS.length],
   }));
 
-  const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
+  const totalHours = chartData.reduce((sum, item) => sum + item.hours, 0);
 
   return (
-    <Card>
+    <Card className="glass shadow-glass animate-fade-in-up transition-premium hover:shadow-glass-hover">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="h-4 w-4 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-base font-display">
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <Clock className="h-4 w-4 text-primary" />
+              </div>
               Effort by Phase
             </CardTitle>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Breakdown of effort across lifecycle phases
             </p>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 p-1 rounded-lg bg-muted/50">
             <Button
               variant={viewMode === 'chart' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('chart')}
               aria-label="Chart view"
+              className="h-7 w-7 p-0"
             >
-              <BarChart3 className="h-4 w-4" />
+              <BarChart3 className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('table')}
               aria-label="Table view"
+              className="h-7 w-7 p-0"
             >
-              <Table2 className="h-4 w-4" />
+              <Table2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -106,50 +151,82 @@ export function PhaseDistributionView({ caseStudyId }: PhaseDistributionViewProp
             </p>
           ) : (
             <div className="flex items-center gap-6">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 relative">
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
+                    <defs>
+                      {chartData.map((entry, index) => (
+                        <linearGradient
+                          key={`gradient-${index}`}
+                          id={`gradient-${index}`}
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="1"
+                        >
+                          <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                          <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+                        </linearGradient>
+                      ))}
+                    </defs>
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
+                      innerRadius={65}
+                      outerRadius={105}
+                      paddingAngle={3}
                       dataKey="value"
                       strokeWidth={0}
+                      animationBegin={0}
+                      animationDuration={800}
+                      animationEasing="ease-out"
                     >
-                      {chartData.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
+                      {chartData.map((entry, index) => (
+                        <Cell
+                          key={entry.name}
+                          fill={`url(#gradient-${index})`}
+                          className="transition-all duration-200 hover:opacity-80"
+                          style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip
-                      formatter={(
-                        value: number,
-                        _name: string,
-                        props: { payload?: { hours: number; tickets: number } }
-                      ) => [
-                        `${value.toFixed(1)}% (${props.payload?.hours.toFixed(1)}h, ${props.payload?.tickets} tickets)`,
-                        'Effort',
-                      ]}
-                    />
+                    <Tooltip content={<PremiumTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
+                {/* Center label */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold font-display tabular-nums text-foreground">
+                      {totalHours.toFixed(0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                      Total Hours
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="w-[160px] shrink-0 space-y-2 max-h-[240px] overflow-y-auto">
-                {chartData.map((entry) => {
-                  const percentage =
-                    totalValue > 0 ? ((entry.value / totalValue) * 100).toFixed(0) : 0;
+              {/* Legend */}
+              <div className="w-[180px] shrink-0 space-y-2 max-h-[260px] overflow-y-auto pr-2">
+                {chartData.map((entry, index) => {
+                  const percentage = entry.value.toFixed(0);
                   return (
-                    <div key={entry.name} className="flex items-center gap-3">
+                    <div
+                      key={entry.name}
+                      className="group flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/50 cursor-default animate-fade-in-up"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
                       <div
-                        className="h-3 w-3 rounded-full shrink-0"
-                        style={{ backgroundColor: entry.color }}
+                        className="h-3 w-3 rounded-full shrink-0 transition-transform group-hover:scale-110"
+                        style={{
+                          backgroundColor: entry.color,
+                          boxShadow: `0 0 0 2px var(--card), 0 0 0 4px ${entry.color}40`,
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium leading-none truncate">{entry.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {entry.hours.toFixed(1)}h ({percentage}%)
+                        <p className="text-xs text-muted-foreground mt-1 tabular-nums">
+                          {entry.hours.toFixed(1)}h · {percentage}%
                         </p>
                       </div>
                     </div>

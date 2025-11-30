@@ -117,19 +117,27 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
       {
         accessorKey: 'jiraKey',
         header: 'Key',
-        cell: ({ row }) => <span className="font-mono text-sm">{row.getValue('jiraKey')}</span>,
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-primary font-medium">
+            {row.getValue('jiraKey')}
+          </span>
+        ),
       },
       {
         accessorKey: 'summary',
         header: 'Summary',
         cell: ({ row }) => (
-          <span className="line-clamp-2 max-w-[300px]">{row.getValue('summary')}</span>
+          <span className="line-clamp-2 max-w-[300px] text-sm">{row.getValue('summary')}</span>
         ),
       },
       {
         accessorKey: 'currentStatus',
         header: 'Status',
-        cell: ({ row }) => <Badge variant="outline">{row.getValue('currentStatus')}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant="outline" className="font-medium">
+            {row.getValue('currentStatus')}
+          </Badge>
+        ),
       },
       {
         id: 'effectivePhase',
@@ -139,7 +147,10 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
           const phase = ticket.phaseOverride;
           const isOverride = !!ticket.phaseOverride;
           return (
-            <Badge variant={isOverride ? 'default' : 'secondary'}>
+            <Badge
+              variant={isOverride ? 'default' : 'secondary'}
+              className={isOverride ? 'bg-gradient-primary text-primary-foreground' : ''}
+            >
               {phase ? LIFECYCLE_PHASE_LABELS[phase as LifecyclePhase] || phase : 'Auto'}
             </Badge>
           );
@@ -153,9 +164,14 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
           const discipline = ticket.disciplineOverride || ticket.discipline;
           const isOverride = !!ticket.disciplineOverride;
           return discipline ? (
-            <Badge variant={isOverride ? 'default' : 'secondary'}>{discipline}</Badge>
+            <Badge
+              variant={isOverride ? 'default' : 'secondary'}
+              className={isOverride ? 'bg-gradient-accent text-accent-foreground' : ''}
+            >
+              {discipline}
+            </Badge>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground text-sm">—</span>
           );
         },
       },
@@ -169,7 +185,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
           return complexity ? (
             <Badge variant={isOverride ? 'default' : 'secondary'}>{complexity}</Badge>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground text-sm">—</span>
           );
         },
       },
@@ -178,7 +194,12 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
         header: 'Excluded',
         cell: ({ row }) =>
           row.getValue('excludedFromMetrics') ? (
-            <Badge variant="destructive">Excluded</Badge>
+            <Badge
+              variant="destructive"
+              className="bg-destructive/10 text-destructive border-destructive/30"
+            >
+              Excluded
+            </Badge>
           ) : null,
       },
     ],
@@ -217,10 +238,11 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center gap-4">
+    <div className="space-y-4 animate-fade-in-up">
+      <Card className="glass shadow-glass">
+        <CardHeader className="pb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Data Type Selector */}
             <Select
               value={type}
               onValueChange={(v) => {
@@ -229,7 +251,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                 setRowSelection({});
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] glass-subtle">
                 <SelectValue placeholder="Data type" />
               </SelectTrigger>
               <SelectContent>
@@ -239,16 +261,18 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
               </SelectContent>
             </Select>
 
+            {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by key or summary..."
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9"
+                className="pl-9 glass-subtle"
               />
             </div>
 
+            {/* Phase Filter */}
             <Select
               value={phaseFilter}
               onValueChange={(v) => {
@@ -256,7 +280,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                 setPage(0);
               }}
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[160px] glass-subtle">
                 <SelectValue placeholder="Phase" />
               </SelectTrigger>
               <SelectContent>
@@ -269,6 +293,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
               </SelectContent>
             </Select>
 
+            {/* Discipline Filter */}
             <Select
               value={disciplineFilter}
               onValueChange={(v) => {
@@ -276,7 +301,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                 setPage(0);
               }}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[140px] glass-subtle">
                 <SelectValue placeholder="Discipline" />
               </SelectTrigger>
               <SelectContent>
@@ -290,6 +315,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
               </SelectContent>
             </Select>
 
+            {/* Filter Pills */}
             <Button
               variant={excludedOnly ? 'default' : 'outline'}
               size="sm"
@@ -297,9 +323,10 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                 setExcludedOnly(!excludedOnly);
                 setPage(0);
               }}
+              className={excludedOnly ? 'bg-gradient-primary' : ''}
             >
-              <Filter className="mr-1 h-4 w-4" />
-              Excluded Only
+              <Filter className="mr-1.5 h-3.5 w-3.5" />
+              Excluded
             </Button>
 
             <Button
@@ -309,14 +336,20 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                 setHasOverrides(!hasOverrides);
                 setPage(0);
               }}
+              className={hasOverrides ? 'bg-gradient-accent' : ''}
             >
-              <Filter className="mr-1 h-4 w-4" />
-              Has Overrides
+              <Filter className="mr-1.5 h-3.5 w-3.5" />
+              Overrides
             </Button>
 
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
-                <X className="mr-1 h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-muted-foreground"
+              >
+                <X className="mr-1.5 h-3.5 w-3.5" />
                 Clear
               </Button>
             )}
@@ -334,21 +367,29 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
 
           {isLoading ? (
             <div className="flex h-[400px] items-center justify-center">
-              <span className="text-muted-foreground">Loading...</span>
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-muted-foreground">Loading data...</span>
+              </div>
             </div>
           ) : error ? (
-            <div className="rounded-lg border border-dashed border-destructive p-8 text-center text-destructive">
-              Failed to load data. Please try again.
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+              <p className="text-sm text-destructive font-medium">
+                Failed to load data. Please try again.
+              </p>
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
+                      <TableRow key={headerGroup.id} className="bg-muted/30 hover:bg-muted/30">
                         {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id}>
+                          <TableHead
+                            key={header.id}
+                            className="font-semibold text-xs uppercase tracking-wider"
+                          >
                             {header.isPlaceholder
                               ? null
                               : flexRender(header.column.columnDef.header, header.getContext())}
@@ -359,10 +400,15 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                   </TableHeader>
                   <TableBody>
                     {table.getRowModel().rows?.length ? (
-                      table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                      table.getRowModel().rows.map((row, index) => (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && 'selected'}
+                          className="group transition-colors animate-fade-in-up"
+                          style={{ animationDelay: `${index * 20}ms` }}
+                        >
                           {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
+                            <TableCell key={cell.id} className="py-3">
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </TableCell>
                           ))}
@@ -371,7 +417,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={columns.length} className="h-24 text-center">
-                          No results.
+                          <p className="text-muted-foreground">No results found</p>
                         </TableCell>
                       </TableRow>
                     )}
@@ -379,11 +425,15 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                 </Table>
               </div>
 
+              {/* Pagination */}
               <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Showing {data?.offset || 0 + 1} to{' '}
-                  {Math.min((data?.offset || 0) + PAGE_SIZE, data?.total || 0)} of{' '}
-                  {data?.total || 0} results
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  Showing{' '}
+                  <span className="font-medium text-foreground">{(data?.offset || 0) + 1}</span> to{' '}
+                  <span className="font-medium text-foreground">
+                    {Math.min((data?.offset || 0) + PAGE_SIZE, data?.total || 0)}
+                  </span>{' '}
+                  of <span className="font-medium text-foreground">{data?.total || 0}</span> results
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -391,6 +441,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                     size="sm"
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
+                    className="glass-subtle"
                   >
                     Previous
                   </Button>
@@ -399,6 +450,7 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
                     size="sm"
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page >= totalPages - 1}
+                    className="glass-subtle"
                   >
                     Next
                   </Button>

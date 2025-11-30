@@ -1272,6 +1272,21 @@ function seedCaseStudy(): string {
   );
 
   console.log(`Created case study: ${id} (${CASE_STUDY_NAME})`);
+
+  // Create a corresponding import record for the seeded case study
+  const importId = randomUUID();
+  db.prepare(
+    `
+    INSERT INTO case_study_imports (
+      id, case_study_id, import_type, jira_project_key, status,
+      ticket_count, event_count, start_date, end_date, created_at, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `
+  ).run(importId, id, 'project', JIRA_PROJECT, 'completed', 50, 500, startDate, endDate, now, now);
+
+  console.log(`Created case study import: ${importId} (project import)`);
+
   return id;
 }
 

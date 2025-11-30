@@ -3,11 +3,12 @@
 export interface CaseStudy {
   id: string; // UUID
   name: string;
-  type: 'project' | 'sprint' | 'ticket';
+  type?: 'project' | 'sprint' | 'ticket' | 'feature'; // Optional: kept for backwards compatibility
 
-  // Jira metadata
+  // Jira metadata (shared across all imports in this case study)
   jiraProjectKey: string;
   jiraProjectId?: string;
+  // Deprecated - kept for backwards compatibility, prefer case_study_imports table
   jiraSprintId?: string;
   jiraTicketKey?: string;
 
@@ -18,16 +19,39 @@ export interface CaseStudy {
   // Import metadata
   importedAt: Date;
   importedBy?: string;
-  ticketCount: number;
-  eventCount: number;
+  ticketCount: number; // Aggregated across all imports
+  eventCount: number; // Aggregated across all imports
 
-  // Date range
+  // Date range (across all imports)
   startDate: Date;
   endDate: Date;
 
-  // Status
+  // Status (aggregated: 'completed' if all imports completed, 'error' if any failed, 'importing' if any in progress)
   status: 'importing' | 'completed' | 'error';
   errorMessage?: string;
+}
+
+export interface CaseStudyImport {
+  id: string; // UUID
+  caseStudyId: string;
+  importType: 'project' | 'sprint' | 'ticket' | 'feature';
+
+  // Jira metadata (specific to this import)
+  jiraProjectKey: string;
+  jiraProjectId?: string;
+  jiraSprintId?: string;
+  jiraTicketKey?: string;
+  jiraLabel?: string;
+
+  // Import status
+  status: 'importing' | 'completed' | 'error';
+  ticketCount: number;
+  eventCount: number;
+  startDate?: Date;
+  endDate?: Date;
+  errorMessage?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SprintSummary {
@@ -284,6 +308,25 @@ export interface CaseStudyRow {
   status: string;
   error_message: string | null;
   created_at: string;
+}
+
+export interface CaseStudyImportRow {
+  id: string;
+  case_study_id: string;
+  import_type: string;
+  jira_project_key: string;
+  jira_project_id: string | null;
+  jira_sprint_id: string | null;
+  jira_ticket_key: string | null;
+  jira_label: string | null;
+  status: string;
+  ticket_count: number;
+  event_count: number;
+  start_date: string | null;
+  end_date: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface JiraTicketRow {

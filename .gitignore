@@ -144,3 +144,6 @@ bun.lockb
 
 
 
+
+# Database backups
+*.db.backup.*

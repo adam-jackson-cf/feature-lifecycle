@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GitHubConfigForm } from './GitHubConfigForm';
 import { JiraImportForm } from './JiraImportForm';
 
-type ImportType = 'project' | 'sprint' | 'ticket';
+type ImportType = 'project' | 'sprint' | 'ticket' | 'feature';
 
 interface ImportData {
   type: ImportType;
@@ -15,6 +15,7 @@ interface ImportData {
     projectKey: string;
     sprintId?: string;
     ticketKey?: string;
+    label?: string;
   };
   github: {
     owner: string;
@@ -122,6 +123,8 @@ export function ImportWizard() {
         jiraEndpoint = '/api/import/jira/sprint';
       } else if (importData.type === 'ticket') {
         jiraEndpoint = '/api/import/jira/ticket';
+      } else if (importData.type === 'feature') {
+        jiraEndpoint = '/api/import/jira/feature';
       }
 
       const jiraBody: Record<string, unknown> = {
@@ -148,6 +151,9 @@ export function ImportWizard() {
           console.warn('Could not fetch ticket, will try with project key:', err);
           jiraBody.projectKey = importData.jira.projectKey;
         }
+      } else if (importData.type === 'feature' && importData.jira.label) {
+        jiraBody.projectKey = importData.jira.projectKey;
+        jiraBody.label = importData.jira.label;
       }
 
       const jiraResponse = await fetch(jiraEndpoint, {
@@ -213,9 +219,9 @@ export function ImportWizard() {
               <Button
                 variant="outline"
                 onClick={() => handleTypeSelect('project')}
-                className="h-auto p-4 text-left"
+                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
               >
-                <div>
+                <div className="flex flex-col items-start gap-1">
                   <div className="font-semibold">Project</div>
                   <div className="text-sm text-muted-foreground">
                     Import all tickets from a Jira project
@@ -225,9 +231,9 @@ export function ImportWizard() {
               <Button
                 variant="outline"
                 onClick={() => handleTypeSelect('sprint')}
-                className="h-auto p-4 text-left"
+                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
               >
-                <div>
+                <div className="flex flex-col items-start gap-1">
                   <div className="font-semibold">Sprint</div>
                   <div className="text-sm text-muted-foreground">
                     Import tickets from a specific sprint
@@ -237,11 +243,21 @@ export function ImportWizard() {
               <Button
                 variant="outline"
                 onClick={() => handleTypeSelect('ticket')}
-                className="h-auto p-4 text-left"
+                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
               >
-                <div>
+                <div className="flex flex-col items-start gap-1">
                   <div className="font-semibold">Single Ticket</div>
                   <div className="text-sm text-muted-foreground">Import a single Jira ticket</div>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleTypeSelect('feature')}
+                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex flex-col items-start gap-1">
+                  <div className="font-semibold">Feature</div>
+                  <div className="text-sm text-muted-foreground">Import tickets by Jira label</div>
                 </div>
               </Button>
             </div>
@@ -276,6 +292,11 @@ export function ImportWizard() {
               {importData.jira?.ticketKey && (
                 <p>
                   <strong>Ticket Key:</strong> {importData.jira.ticketKey}
+                </p>
+              )}
+              {importData.jira?.label && (
+                <p>
+                  <strong>Label:</strong> {importData.jira.label}
                 </p>
               )}
               <p>

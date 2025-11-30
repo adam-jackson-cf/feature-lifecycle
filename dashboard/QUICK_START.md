@@ -28,16 +28,23 @@ The server will start at [http://localhost:3000](http://localhost:3000)
 
 1. Navigate to [http://localhost:3000/import/new](http://localhost:3000/import/new)
 2. Follow these steps:
-   - **Step 1**: Select "Single Ticket" (fastest for testing)
-   - **Step 2**: Enter:
+   - **Step 1**: Select an import type:
+     - **Single Ticket** (fastest for testing)
+     - **Project** (imports all tickets from a Jira project)
+     - **Sprint** (imports tickets from a specific sprint)
+     - **Feature** (imports tickets by Jira label)
+   - **Step 2**: Enter Jira details:
      - Jira Project Key: `KAFKA`
-     - Ticket Key: `KAFKA-19734` (or any valid KAFKA ticket)
-   - **Step 3**: Enter:
+     - For "Single Ticket": Ticket Key: `KAFKA-19734`
+     - For "Feature": Label: `feature-checkout` (or any label)
+   - **Step 3**: Enter GitHub details:
      - GitHub Owner: `apache`
      - Repository Name: `kafka`
    - **Step 4**: Click "Start Import"
 3. Wait for the import to complete (you'll see progress messages)
 4. You'll be automatically redirected to the case study dashboard
+
+**Note:** You can add multiple imports to the same case study. After creating a case study, you can use the "New Import" option again to add additional tickets from different sources (project, sprint, ticket, or feature).
 
 ### Option B: Using the API Directly
 
@@ -110,6 +117,7 @@ The project uses **Apache Kafka** as the primary test data source:
 If you encounter database errors:
 - The database is automatically created at `dashboard/data/lifecycle.db`
 - Delete it to start fresh: `rm dashboard/data/lifecycle.db`
+- Migrations run automatically on startup - the latest migration (004) adds support for multiple imports per case study
 
 ### Import Failures
 
@@ -128,7 +136,9 @@ PORT=3001 bun run dev
 ## Next Steps
 
 - Explore the dashboard metrics and visualisations
-- Try importing different ticket types (project, sprint, ticket)
+- Try importing different ticket types (project, sprint, ticket, feature)
+- Add multiple imports to the same case study to aggregate data
+- Check out the Flow tab for ticket flow analysis and the Data Explorer tab for detailed data review
 - Check out the timeline view at `/case-studies/[id]/timeline`
 - Review the rules configuration at `/rules`
 

@@ -117,6 +117,7 @@ bun run test:run
 - `POST /api/import/jira/project` - Import Jira project
 - `POST /api/import/jira/sprint` - Import Jira sprint
 - `POST /api/import/jira/ticket` - Import single Jira ticket
+- `POST /api/import/jira/feature` - Import Jira tickets by label
 - `POST /api/import/github` - Import GitHub data for case study
 
 ### Metrics
@@ -160,6 +161,10 @@ The application uses SQLite with the database file located at:
 - Custom: Set `DATABASE_PATH` environment variable
 
 Database schema is automatically initialized on app startup. Migrations are located in `lib/db/migrations/`.
+
+**Note:** Migrations run automatically when the database is initialized. The latest migration (004) adds support for multiple imports per case study via the `case_study_imports` table. If you need to regenerate your database, delete the existing database file and restart the application.
+
+**Multiple Imports:** Case studies can now have multiple import runs. Each import is tracked separately in the `case_study_imports` table, allowing you to import from different sources (project, sprint, ticket, or feature/label) into the same case study. Aggregated metrics across all imports are shown in the case study dashboard.
 
 ## Test Data Sources
 
