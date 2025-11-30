@@ -1,7 +1,7 @@
 'use client';
 
 import { Layers } from 'lucide-react';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CHART_COLORS } from '@/lib/constants/chart-colors';
 import { useMetrics } from '@/lib/hooks/useMetrics';
@@ -15,25 +15,6 @@ interface SizeDatum {
   value: number;
   color: string;
   [key: string]: unknown;
-}
-
-function PremiumTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: Array<{ payload: SizeDatum }>;
-}) {
-  if (!active || !payload?.length) return null;
-  const data = payload[0].payload;
-  return (
-    <div className="glass-strong rounded-lg border border-border/50 px-4 py-3 shadow-glass">
-      <p className="text-sm font-semibold font-display text-foreground">Size: {data.name}</p>
-      <p className="text-xs text-muted-foreground mt-1">
-        Count: <span className="font-medium text-foreground tabular-nums">{data.value}</span>
-      </p>
-    </div>
-  );
 }
 
 export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps) {
@@ -143,7 +124,6 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<PremiumTooltip />} />
               </PieChart>
             </ResponsiveContainer>
             {/* Center label */}
@@ -157,25 +137,22 @@ export function EffortComplexityView({ caseStudyId }: EffortComplexityViewProps)
             </div>
           </div>
           {/* Legend */}
-          <div className="w-[160px] shrink-0 space-y-2 max-h-[260px] overflow-y-auto pr-2">
+          <div className="w-[200px] shrink-0 grid grid-cols-2 gap-x-2 gap-y-1">
             {chartData.map((entry, index) => {
               const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0;
               return (
                 <div
                   key={entry.name}
-                  className="group flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/50 cursor-default animate-fade-in-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="flex items-center gap-1.5 py-0.5 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 30}ms` }}
                 >
                   <div
-                    className="h-3 w-3 rounded-full shrink-0 transition-transform group-hover:scale-110"
-                    style={{
-                      backgroundColor: entry.color,
-                      boxShadow: `0 0 0 2px var(--card), 0 0 0 4px ${entry.color}40`,
-                    }}
+                    className="h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: entry.color }}
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold leading-none">{entry.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1 tabular-nums">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold leading-tight">{entry.name}</p>
+                    <p className="text-[10px] text-muted-foreground tabular-nums leading-tight">
                       {entry.value} · {percentage}%
                     </p>
                   </div>

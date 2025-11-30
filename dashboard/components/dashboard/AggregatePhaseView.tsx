@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PhaseDistribution } from '@/lib/types';
 import { PhaseDistributionTable } from './PhaseDistributionTable';
@@ -100,13 +100,6 @@ export function AggregatePhaseView() {
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(
-                    value: number,
-                    _name: string,
-                    props: { payload?: { hours: number; tickets: number } }
-                  ) => [`${value.toFixed(1)}% (${props.payload?.hours.toFixed(1)}h)`, 'Effort']}
-                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>

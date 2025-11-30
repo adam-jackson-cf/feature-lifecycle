@@ -1,11 +1,14 @@
 'use client';
 
+import { FolderKanban, Tags, Ticket, Timer } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GitHubConfigForm } from './GitHubConfigForm';
+import { ImportTypeCard } from './ImportTypeCard';
 import { JiraImportForm } from './JiraImportForm';
+import { StepIndicator } from './StepIndicator';
 
 type ImportType = 'project' | 'sprint' | 'ticket' | 'feature';
 
@@ -23,6 +26,42 @@ interface ImportData {
   };
   useMock: boolean;
 }
+
+const WIZARD_STEPS = [
+  { label: 'Import Type', shortLabel: 'Type' },
+  { label: 'Jira Configuration', shortLabel: 'Jira' },
+  { label: 'GitHub Configuration', shortLabel: 'GitHub' },
+  { label: 'Review & Confirm', shortLabel: 'Review' },
+];
+
+const IMPORT_TYPES = [
+  {
+    type: 'project' as ImportType,
+    icon: FolderKanban,
+    title: 'Project',
+    description:
+      'Import all tickets from a Jira project. Best for analyzing complete project lifecycle.',
+  },
+  {
+    type: 'sprint' as ImportType,
+    icon: Timer,
+    title: 'Sprint',
+    description: 'Import tickets from a specific sprint. Ideal for sprint retrospectives.',
+  },
+  {
+    type: 'ticket' as ImportType,
+    icon: Ticket,
+    title: 'Single Ticket',
+    description:
+      'Import a single Jira ticket and its complete history. For deep-diving into one issue.',
+  },
+  {
+    type: 'feature' as ImportType,
+    icon: Tags,
+    title: 'Feature',
+    description: 'Import tickets matching a Jira label. Perfect for tracking feature development.',
+  },
+];
 
 export function ImportWizard() {
   const router = useRouter();
@@ -208,58 +247,29 @@ export function ImportWizard() {
 
   return (
     <Card className="max-w-2xl mx-auto">
-      <CardHeader>
+      <CardHeader className="space-y-4">
         <CardTitle>Import Wizard</CardTitle>
+        <StepIndicator steps={WIZARD_STEPS} currentStep={step} />
       </CardHeader>
       <CardContent>
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Select Import Type</h2>
-            <div className="grid gap-4">
-              <Button
-                variant="outline"
-                onClick={() => handleTypeSelect('project')}
-                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="font-semibold">Project</div>
-                  <div className="text-sm text-muted-foreground">
-                    Import all tickets from a Jira project
-                  </div>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleTypeSelect('sprint')}
-                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="font-semibold">Sprint</div>
-                  <div className="text-sm text-muted-foreground">
-                    Import tickets from a specific sprint
-                  </div>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleTypeSelect('ticket')}
-                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="font-semibold">Single Ticket</div>
-                  <div className="text-sm text-muted-foreground">Import a single Jira ticket</div>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleTypeSelect('feature')}
-                className="h-auto p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="font-semibold">Feature</div>
-                  <div className="text-sm text-muted-foreground">Import tickets by Jira label</div>
-                </div>
-              </Button>
+            <div>
+              <h2 className="text-lg font-semibold">Select Import Type</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose how you want to import your development data
+              </p>
+            </div>
+            <div className="grid gap-3">
+              {IMPORT_TYPES.map((importType) => (
+                <ImportTypeCard
+                  key={importType.type}
+                  icon={importType.icon}
+                  title={importType.title}
+                  description={importType.description}
+                  onClick={() => handleTypeSelect(importType.type)}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -275,53 +285,133 @@ export function ImportWizard() {
         {step === 3 && <GitHubConfigForm onSubmit={handleGitHubSubmit} onBack={() => setStep(2)} />}
 
         {step === 4 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Review & Confirm</h2>
-            <div className="space-y-2">
-              <p>
-                <strong>Type:</strong> {importData.type}
-              </p>
-              <p>
-                <strong>Jira Project:</strong> {importData.jira?.projectKey}
-              </p>
-              {importData.jira?.sprintId && (
-                <p>
-                  <strong>Sprint ID:</strong> {importData.jira.sprintId}
-                </p>
-              )}
-              {importData.jira?.ticketKey && (
-                <p>
-                  <strong>Ticket Key:</strong> {importData.jira.ticketKey}
-                </p>
-              )}
-              {importData.jira?.label && (
-                <p>
-                  <strong>Label:</strong> {importData.jira.label}
-                </p>
-              )}
-              <p>
-                <strong>GitHub:</strong> {importData.github?.owner}/{importData.github?.repo}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold">Review & Confirm</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Verify your import configuration before starting
               </p>
             </div>
 
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Jira Config Card */}
+              <div className="p-4 rounded-lg border border-border bg-muted/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-600">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005z" />
+                      <path
+                        d="M5.024 5.7H16.59a5.218 5.218 0 0 1-5.232 5.215h-2.13v2.057A5.215 5.215 0 0 1 4.02 18.18V6.71A1.005 1.005 0 0 1 5.024 5.7z"
+                        opacity="0.75"
+                      />
+                      <path
+                        d="M10.468 0h11.572a5.218 5.218 0 0 1-5.232 5.215h-2.13v2.057A5.215 5.215 0 0 1 9.464 12.49V1.005A1.005 1.005 0 0 1 10.468 0z"
+                        opacity="0.5"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">Jira</span>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Type: </span>
+                    <span className="font-medium capitalize">{importData.type}</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Project: </span>
+                    <span className="font-mono font-medium">{importData.jira?.projectKey}</span>
+                  </p>
+                  {importData.jira?.sprintId && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Sprint: </span>
+                      <span className="font-mono font-medium">{importData.jira.sprintId}</span>
+                    </p>
+                  )}
+                  {importData.jira?.ticketKey && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Ticket: </span>
+                      <span className="font-mono font-medium">{importData.jira.ticketKey}</span>
+                    </p>
+                  )}
+                  {importData.jira?.label && (
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Label: </span>
+                      <span className="font-mono font-medium">{importData.jira.label}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* GitHub Config Card */}
+              <div className="p-4 rounded-lg border border-border bg-muted/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground/10 text-foreground">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">GitHub</span>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Repository: </span>
+                    <span className="font-mono font-medium">
+                      {importData.github?.owner}/{importData.github?.repo}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* What will happen */}
+            <div className="p-4 rounded-lg border border-border bg-muted/20">
+              <h3 className="text-sm font-medium mb-2">What will happen:</h3>
+              <ul className="text-sm text-muted-foreground space-y-1.5">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  Fetch {importData.type === 'ticket' ? 'ticket history' : 'tickets'} from{' '}
+                  {importData.jira?.projectKey}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  Link commits and PRs from {importData.github?.owner}/{importData.github?.repo}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  Calculate lifecycle metrics and phase distribution
+                </li>
+              </ul>
+            </div>
+
             {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">Error:</p>
-                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm font-semibold text-destructive mb-1">Error</p>
+                <p className="text-sm text-destructive/90">{error}</p>
               </div>
             )}
 
             {importProgress && (
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                <p className="text-sm text-blue-800 dark:text-blue-200">{importProgress}</p>
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <p className="text-sm text-primary">{importProgress}</p>
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex gap-3 pt-2">
               <Button variant="outline" onClick={() => setStep(3)} disabled={isImporting}>
                 Back
               </Button>
-              <Button onClick={handleImport} disabled={isImporting}>
+              <Button onClick={handleImport} disabled={isImporting} className="flex-1">
                 {isImporting ? 'Importing...' : 'Start Import'}
               </Button>
             </div>
