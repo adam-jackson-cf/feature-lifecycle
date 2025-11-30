@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Filter, Search, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -71,13 +71,17 @@ export function DataExplorerView({ caseStudyId }: DataExplorerViewProps) {
   const { data, isLoading, error } = useDataExplorer<JiraTicket>(filters);
   const bulkUpdate = useDataExplorerBulkUpdate();
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
+  // Debounce search input
+  useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(value);
+      setDebouncedSearch(search);
       setPage(0);
     }, 300);
     return () => clearTimeout(timer);
+  }, [search]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
   };
 
   const clearFilters = () => {

@@ -51,13 +51,17 @@ export class DataExplorerRepository {
     `);
     const countResult = countStmt.get(params) as { count: number };
 
+    // Build complete params object with limit and offset
+    const queryParams: Record<string, unknown> = { ...params };
+    queryParams.limit = limit;
+    queryParams.offset = offset;
     const dataStmt = this.db.prepare(`
       SELECT * FROM jira_tickets
       ${whereClause}
       ORDER BY updated_at DESC
       LIMIT @limit OFFSET @offset
     `);
-    const rows = dataStmt.all({ ...params, limit, offset }) as JiraTicketRow[];
+    const rows = dataStmt.all(queryParams) as JiraTicketRow[];
 
     return {
       data: rows.map((row) => this.mapRowToTicket(row)),
@@ -79,13 +83,17 @@ export class DataExplorerRepository {
     `);
     const countResult = countStmt.get(params) as { count: number };
 
+    // Build complete params object with limit and offset
+    const queryParams: Record<string, unknown> = { ...params };
+    queryParams.limit = limit;
+    queryParams.offset = offset;
     const dataStmt = this.db.prepare(`
       SELECT * FROM lifecycle_events
       ${whereClause}
       ORDER BY event_date DESC
       LIMIT @limit OFFSET @offset
     `);
-    const rows = dataStmt.all({ ...params, limit, offset }) as LifecycleEventRow[];
+    const rows = dataStmt.all(queryParams) as LifecycleEventRow[];
 
     return {
       data: rows.map((row) => this.mapRowToEvent(row)),
@@ -107,13 +115,17 @@ export class DataExplorerRepository {
     `);
     const countResult = countStmt.get(params) as { count: number };
 
+    // Build complete params object with limit and offset
+    const queryParams: Record<string, unknown> = { ...params };
+    queryParams.limit = limit;
+    queryParams.offset = offset;
     const dataStmt = this.db.prepare(`
       SELECT * FROM normalized_events
       ${whereClause}
       ORDER BY occurred_at DESC
       LIMIT @limit OFFSET @offset
     `);
-    const rows = dataStmt.all({ ...params, limit, offset }) as NormalizedEventRow[];
+    const rows = dataStmt.all(queryParams) as NormalizedEventRow[];
 
     return {
       data: rows.map((row) => this.mapRowToNormalizedEvent(row)),
