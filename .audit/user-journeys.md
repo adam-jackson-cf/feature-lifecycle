@@ -18,10 +18,10 @@ This document defines automated browser test steps for each user journey in the 
 
 - Home page case study cards with status badges
 - Case Study Dashboard with all metric charts (donut charts, bar charts)
-- Tab switching (Overview/Data Quality) - via direct navigation
-- Timeline View with Ticket Flow Analysis, expandable tickets
+- Tab switching (Overview/Flow/Data Explorer/Data Quality) - Radix tabs on dashboard
+- Timeline View (Flow tab) with Ticket Flow Analysis, expandable tickets
 - Import Wizard 4-step flow with forward/back navigation
-- Header navigation between all routes
+- Header navigation (Case Studies, New Import)
 - Pagination and filter UI elements render correctly
 
 ---
@@ -62,9 +62,11 @@ await page.evaluate(() => window.scrollTo(0, 800));
 await expect(page.getByText('Effort by Complexity')).toBeVisible();
 await expect(page.getByText('Discipline Distribution')).toBeVisible();
 
-// Step 8: Scroll to Ticket Flow Analysis
-await page.evaluate(() => window.scrollTo(0, 1600));
-await expect(page.getByText('Ticket Flow Analysis')).toBeVisible();
+// Step 8: Verify tabs are available
+await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible();
+await expect(page.getByRole('tab', { name: 'Flow' })).toBeVisible();
+await expect(page.getByRole('tab', { name: 'Data Explorer' })).toBeVisible();
+await expect(page.getByRole('tab', { name: 'Data Quality' })).toBeVisible();
 ```
 
 ### Expected Results
@@ -72,13 +74,15 @@ await expect(page.getByText('Ticket Flow Analysis')).toBeVisible();
 - All 6 metric cards show values
 - Effort by Phase, Status Distribution, Effort by Complexity, Discipline Distribution charts render
 - Time to completion chart displays
-- Ticket Flow Analysis shows at bottom
+- Four tabs available: Overview, Flow, Data Explorer, Data Quality
 
 ---
 
 ## User Journey 2: Navigate Header Links
 
-**Description:** User navigates between all main routes using header navigation.
+**Description:** User navigates between main routes using header navigation.
+
+**Note:** Header navigation only includes "Case Studies" and "New Import". Flow and Data Explorer are accessed via tabs on the dashboard page, not header links.
 
 ### Steps
 
@@ -87,35 +91,27 @@ await expect(page.getByText('Ticket Flow Analysis')).toBeVisible();
 await page.goto('http://localhost:3000');
 await expect(page.getByText('Case Studies').first()).toBeVisible();
 
-// Step 2: Click Overview link
-await page.getByRole('link', { name: 'Overview' }).click();
-await expect(page.url()).toContain('/aggregate');
-await expect(page.getByText('Project Overview')).toBeVisible();
-
-// Step 3: Click Data Explorer link
-await page.getByRole('link', { name: 'Data Explorer' }).click();
-await expect(page.url()).toContain('/data-explorer');
-await expect(page.getByText('Data Explorer').first()).toBeVisible();
-
-// Step 4: Click New Import link
+// Step 2: Click New Import link
 await page.getByRole('link', { name: 'New Import' }).click();
 await expect(page.url()).toContain('/import/new');
 await expect(page.getByText('Import Wizard')).toBeVisible();
 
-// Step 5: Click Case Studies to return home
+// Step 3: Click Case Studies to return home
 await page.getByRole('link', { name: 'Case Studies' }).click();
 await expect(page.url()).toBe('http://localhost:3000/');
 ```
 
 ### Expected Results
-- All header links navigate to correct routes
+- Header links navigate to correct routes (Case Studies, New Import)
 - Each page displays appropriate heading/content
 
 ---
 
 ## User Journey 3: View Timeline and Expand Tickets
 
-**Description:** User views full timeline for a case study and expands ticket details.
+**Description:** User views timeline (Flow tab) for a case study and expands ticket details.
+
+**Note:** Flow is accessed via a Radix tab on the dashboard page, not a separate route or button.
 
 ### Steps
 
@@ -123,9 +119,8 @@ await expect(page.url()).toBe('http://localhost:3000/');
 // Step 1: Navigate to case study dashboard
 await page.goto('http://localhost:3000/case-studies/{caseStudyId}');
 
-// Step 2: Click "View Full Timeline" button
-await page.getByRole('button', { name: 'View Full Timeline' }).click();
-await expect(page.url()).toContain('/timeline');
+// Step 2: Click Flow tab
+await page.getByRole('tab', { name: 'Flow' }).click();
 
 // Step 3: Verify Ticket Flow Analysis displays
 await expect(page.getByText('Ticket Flow Analysis')).toBeVisible();
@@ -149,49 +144,14 @@ await expect(page.getByText('Understanding Ticket Flow')).toBeVisible();
 ```
 
 ### Expected Results
-- Timeline page loads with flow analysis
+- Flow tab displays ticket flow analysis
 - Expand All reveals ticket event history
 - Events show status transitions with dates and time deltas
 
----
-
-## User Journey 4: View Aggregate Metrics
-
-**Description:** User views aggregated metrics across all completed case studies.
-
-### Steps
-
-```javascript
-// Step 1: Navigate to aggregate view
-await page.goto('http://localhost:3000/aggregate');
-
-// Step 2: Verify page title
-await expect(page.getByText('Project Overview')).toBeVisible();
-await expect(page.getByText('Aggregated metrics across all completed case studies')).toBeVisible();
-
-// Step 3: Verify phase distribution table
-await expect(page.getByText('Project-Wide Effort by Lifecycle Phase')).toBeVisible();
-await expect(page.getByText('Development')).toBeVisible();
-await expect(page.getByText('Testing & QA')).toBeVisible();
-
-// Step 4: Verify summary stats
-await expect(page.getByText('Total Hours')).toBeVisible();
-await expect(page.getByText('Total Tickets')).toBeVisible();
-await expect(page.getByText('Case Studies')).toBeVisible();
-
-// Step 5: Click back button
-await page.getByRole('button', { name: 'Back to Case Studies' }).click();
-await expect(page.url()).toBe('http://localhost:3000/');
-```
-
-### Expected Results
-- Displays aggregated hours and ticket counts
-- Shows phase breakdown with percentages
-- Back button returns to home
 
 ---
 
-## User Journey 5: Data Explorer Filtering
+## User Journey 4: Data Explorer Filtering
 
 **Description:** User filters and searches data in the Data Explorer.
 
@@ -200,8 +160,9 @@ await expect(page.url()).toBe('http://localhost:3000/');
 ### Steps (for when bug is fixed)
 
 ```javascript
-// Step 1: Navigate to Data Explorer with case study
-await page.goto('http://localhost:3000/data-explorer?caseStudyId={caseStudyId}');
+// Step 1: Navigate to case study dashboard and open Data Explorer tab
+await page.goto('http://localhost:3000/case-studies/{caseStudyId}');
+await page.getByRole('tab', { name: 'Data Explorer' }).click();
 
 // Step 2: Verify data type selector
 await expect(page.getByRole('combobox').first()).toHaveText('Tickets');
@@ -240,7 +201,7 @@ await page.getByRole('button', { name: 'Next' }).click();
 
 ---
 
-## User Journey 6: Import Wizard Flow
+## User Journey 5: Import Wizard Flow
 
 **Description:** User walks through the import wizard to set up a new case study.
 
@@ -299,7 +260,7 @@ await expect(page.getByRole('button', { name: 'Start Import' })).toBeVisible();
 
 ---
 
-## User Journey 7: Export CSV
+## User Journey 6: Export CSV
 
 **Description:** User exports case study data as CSV.
 
@@ -324,9 +285,11 @@ expect(download.suggestedFilename()).toContain('.csv');
 
 ---
 
-## User Journey 8: Navigate to Data Explorer from Dashboard
+## User Journey 7: Navigate to Data Explorer from Dashboard
 
-**Description:** User navigates from dashboard to Data Explorer for the current case study.
+**Description:** User accesses Data Explorer via tab on the dashboard page for the current case study.
+
+**Note:** Data Explorer is a Radix tab on the dashboard page, not a separate route or header link.
 
 ### Steps
 
@@ -334,15 +297,17 @@ expect(download.suggestedFilename()).toContain('.csv');
 // Step 1: Navigate to case study dashboard
 await page.goto('http://localhost:3000/case-studies/{caseStudyId}');
 
-// Step 2: Click Data Explorer button
-await page.getByRole('button', { name: 'Data Explorer' }).click();
+// Step 2: Click Data Explorer tab
+await page.getByRole('tab', { name: 'Data Explorer' }).click();
 
-// Step 3: Verify navigation with caseStudyId param
-await expect(page.url()).toContain('/data-explorer?caseStudyId=');
+// Step 3: Verify Data Explorer content displays
+await expect(page.getByText('Data Explorer')).toBeVisible();
+await expect(page.getByRole('combobox', { name: /Ticket/i })).toBeVisible();
 ```
 
 ### Expected Results
-- Data Explorer opens with case study pre-selected
+- Data Explorer tab displays with case study data
+- Filter controls and table are visible
 
 ---
 

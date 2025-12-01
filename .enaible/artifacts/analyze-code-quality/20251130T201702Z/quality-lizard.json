@@ -1,0 +1,204 @@
+{
+  "tool": "quality:lizard",
+  "analyzer_type": "performance",
+  "success": true,
+  "exit_code": 0,
+  "started_at": "2025-11-30T20:17:23.064580+00:00",
+  "completed_at": "2025-11-30T20:17:41.003128+00:00",
+  "duration_ms": 17938,
+  "target": "/Users/adamjackson/LocalDev/feature-lifecycle",
+  "findings": [
+    {
+      "id": "COMPLEXITY003",
+      "title": "Long Function",
+      "description": "Function '&&' is 107 lines long",
+      "severity": "high",
+      "recommendation": "Consider breaking down this function. Aim for < 50 lines",
+      "file_path": "dashboard/components/dashboard/DataQualityTab.tsx",
+      "line_number": 347,
+      "evidence": {
+        "function_name": "&&",
+        "lines_of_code": 107,
+        "cyclomatic_complexity": 14
+      }
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 1,
+    "medium": 13,
+    "low": 0,
+    "info": 0
+  },
+  "metadata": {
+    "analyzer_type": "complexity",
+    "target_path": ".",
+    "files_analyzed": 93,
+    "files_processed": 93,
+    "files_skipped": 0,
+    "processing_errors": 0,
+    "total_findings": 14,
+    "severity_breakdown": {
+      "critical": 0,
+      "high": 1,
+      "medium": 13,
+      "low": 0,
+      "info": 0
+    },
+    "analyzer_config": {
+      "max_files": null,
+      "max_file_size_mb": 5,
+      "extensions_count": 26,
+      "skip_patterns_count": 23
+    },
+    "analysis_type": "code_complexity",
+    "complexity_metrics": [
+      "cyclomatic_complexity",
+      "function_length",
+      "parameter_count"
+    ],
+    "thresholds": {
+      "cyclomatic_complexity": {
+        "high": 20,
+        "medium": 10,
+        "low": 5
+      },
+      "function_length": {
+        "high": 100,
+        "medium": 50,
+        "low": 25
+      },
+      "parameter_count": {
+        "high": 7,
+        "medium": 5,
+        "low": 4
+      }
+    },
+    "supported_languages": [
+      "Python",
+      "JavaScript",
+      "TypeScript",
+      "Java",
+      "C/C++",
+      "C#",
+      "Ruby",
+      "PHP",
+      "Swift",
+      "Go",
+      "Rust",
+      "Kotlin",
+      "Scala",
+      "Dart",
+      "Lua",
+      "Perl",
+      "R"
+    ],
+    "tool": "Lizard",
+    "tool_installed": true
+  },
+  "stats": {
+    "execution_time_seconds": 17.93817400932312
+  },
+  "errors": [],
+  "raw": {
+    "analysis_type": "performance",
+    "script_name": "complexity_analyzer.py",
+    "target_path": "/Users/adamjackson/LocalDev/feature-lifecycle",
+    "timestamp": "2025-11-30T20:17:23.064632",
+    "execution_time": 17.938,
+    "success": true,
+    "error_message": null,
+    "summary": {
+      "critical": 0,
+      "high": 1,
+      "medium": 13,
+      "low": 0,
+      "info": 0
+    },
+    "findings": [
+      {
+        "id": "COMPLEXITY003",
+        "title": "Long Function",
+        "description": "Function '&&' is 107 lines long",
+        "severity": "high",
+        "file_path": "dashboard/components/dashboard/DataQualityTab.tsx",
+        "line_number": 347,
+        "recommendation": "Consider breaking down this function. Aim for < 50 lines",
+        "evidence": {
+          "function_name": "&&",
+          "lines_of_code": 107,
+          "cyclomatic_complexity": 14
+        }
+      }
+    ],
+    "metadata": {
+      "analyzer_type": "complexity",
+      "target_path": ".",
+      "files_analyzed": 93,
+      "files_processed": 93,
+      "files_skipped": 0,
+      "processing_errors": 0,
+      "total_findings": 14,
+      "severity_breakdown": {
+        "critical": 0,
+        "high": 1,
+        "medium": 13,
+        "low": 0,
+        "info": 0
+      },
+      "analyzer_config": {
+        "max_files": null,
+        "max_file_size_mb": 5,
+        "extensions_count": 26,
+        "skip_patterns_count": 23
+      },
+      "analysis_type": "code_complexity",
+      "complexity_metrics": [
+        "cyclomatic_complexity",
+        "function_length",
+        "parameter_count"
+      ],
+      "thresholds": {
+        "cyclomatic_complexity": {
+          "high": 20,
+          "medium": 10,
+          "low": 5
+        },
+        "function_length": {
+          "high": 100,
+          "medium": 50,
+          "low": 25
+        },
+        "parameter_count": {
+          "high": 7,
+          "medium": 5,
+          "low": 4
+        }
+      },
+      "supported_languages": [
+        "Python",
+        "JavaScript",
+        "TypeScript",
+        "Java",
+        "C/C++",
+        "C#",
+        "Ruby",
+        "PHP",
+        "Swift",
+        "Go",
+        "Rust",
+        "Kotlin",
+        "Scala",
+        "Dart",
+        "Lua",
+        "Perl",
+        "R"
+      ],
+      "tool": "Lizard",
+      "tool_installed": true
+    },
+    "min_severity_filter": "high",
+    "total_findings_before_filter": 14,
+    "total_findings_after_filter": 1
+  }
+}

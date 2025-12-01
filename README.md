@@ -1,38 +1,19 @@
 # Feature Lifecycle Dashboard
 
-A comprehensive dashboard application that tracks the complete development lifecycle of features from Jira ticket creation through GitHub PR merge and release deployment.
-
-## Project Structure
-
-```
-feature-lifecycle/
-├── README.md              # This file
-├── research.md            # Consolidated research documentation
-├── ARCHITECTURE.md        # System architecture and design decisions
-└── dashboard/             # Next.js application implementation
-    ├── app/               # Next.js pages and routes
-    ├── components/        # React components
-    ├── lib/
-    │   ├── db/            # Database schema and connection
-    │   ├── repositories/  # Data access layer
-    │   ├── services/      # Business logic
-    │   ├── types/         # TypeScript definitions
-    │   └── utils/         # Helper functions
-    ├── tests/
-    │   ├── fixtures/      # Mock data for testing
-    │   ├── unit/          # Unit tests (14 passing)
-    │   └── integration/   # Real API integration tests
-    └── public/            # Static assets
-```
+A dashboard application that tracks the complete development lifecycle of features from Jira ticket creation through GitHub PR merge and release deployment.
 
 ## Features
 
-- **Multi-level Import**: Import data at project, sprint, or individual ticket level
-- **Jira Integration**: Fetch tickets, changelogs, and status transitions
-- **GitHub Integration**: Fetch commits, PRs, reviews, and merge history
-- **Data Correlation**: Match Jira tickets with GitHub commits via ticket ID patterns
-- **Timeline Visualization**: Chronological view of the complete development lifecycle
-- **Metrics Calculation**: Lead time, cycle time, sprint velocity
+- **Import Data**: Import from Jira projects, sprints, individual tickets, or tickets by label
+- **GitHub Correlation**: Automatically link commits and PRs to Jira tickets
+- **Timeline View**: Interactive timeline showing complete feature lifecycle events
+- **Metrics Dashboard**: Cycle time, lead time, sprint velocity, and effort analytics
+- **Complexity Scoring**: Configurable complexity rubric for ticket sizing
+- **Data Export**: Export metrics data as CSV
+
+## Prerequisites
+
+- [Bun](https://bun.sh) runtime installed
 
 ## Quick Start
 
@@ -42,56 +23,62 @@ bun install
 bun run dev
 ```
 
-## Running Tests
+Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
+
+## Importing Data
+
+### Using the Import Wizard
+
+1. Navigate to [http://localhost:3000/import/new](http://localhost:3000/import/new)
+2. Select an import type:
+   - **Single Ticket** - Import one Jira ticket (fastest for testing)
+   - **Project** - Import all tickets from a Jira project
+   - **Sprint** - Import tickets from a specific sprint
+   - **Feature** - Import tickets by Jira label
+3. Enter Jira details (e.g., Project Key: `KAFKA`)
+4. Enter GitHub details (e.g., Owner: `apache`, Repo: `kafka`)
+5. Click **Start Import**
+
+You can add multiple imports to the same case study to aggregate data from different sources.
+
+### Test Data
+
+The application works with Apache Kafka's public APIs for testing:
+- **Jira**: https://issues.apache.org/jira/projects/KAFKA (public, no auth required)
+- **GitHub**: https://github.com/apache/kafka (public, no auth required)
+
+Recommended test tickets: `KAFKA-19734`, `KAFKA-17541`
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home page with case study list |
+| `/case-studies/[id]` | Case study dashboard with metrics and charts |
+| `/case-studies/[id]/timeline` | Full timeline view |
+| `/import/new` | Import wizard |
+| `/rules` | Rules configuration editor |
+
+## Dashboard Tabs
+
+- **Overview** - Metrics cards and distribution charts
+- **Flow** - Ticket flow analysis and bottleneck detection
+- **Data Explorer** - Browse and filter raw ticket/event data
+- **Data Quality** - Data completeness and quality assessment
+
+## Troubleshooting
+
+### Database Issues
+
+The database is automatically created at `dashboard/data/lifecycle.db`. To start fresh:
 
 ```bash
-cd dashboard
-
-# Unit tests (offline, uses mock data)
-bun run test:unit
-
-# Integration tests (requires network access)
-bun run test:integration
-
-# All tests
-bun run test:run
+rm dashboard/data/lifecycle.db
+bun run dev  # Database will be recreated
 ```
 
-## Quality Gates
+### Port Already in Use
 
-All must pass before commit:
-- TypeScript type checking: `bun run typecheck`
-- Ultracite linting: `bun run lint`
-- Unit tests: `bun run test:unit`
-
-Or use the Makefile for all quality gates:
 ```bash
-cd dashboard
-make quality-gates
+PORT=3001 bun run dev
 ```
-
-## Documentation
-
-- [Research Documentation](./research.md) - Library selection, API research, test data sources
-- [Architecture Document](./ARCHITECTURE.md) - System design, data models, API endpoints
-
-## Test Data Sources
-
-The project uses **Apache Kafka** as the primary test data source:
-- **Jira**: https://issues.apache.org/jira/projects/KAFKA (public API)
-- **GitHub**: https://github.com/apache/kafka (public API)
-
-Both APIs are publicly accessible without authentication for read-only access.
-
-## Technology Stack
-
-- **Runtime**: Bun (replaces npm entirely; use `bun install`/`bun run`)
-- **Language**: TypeScript 5+
-- **Framework**: Next.js 16 (App Router)
-- **Database**: SQLite with better-sqlite3
-- **Linting/Formatting**: Ultracite (Biome-based)
-- **Jira Integration**: jira.js
-- **GitHub Integration**: Octokit
-- **Testing**: Vitest
-- **UI**: React 19, Tailwind CSS, Recharts, vis-timeline
-- **State Management**: TanStack Query
